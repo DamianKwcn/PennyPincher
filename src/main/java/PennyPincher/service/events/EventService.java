@@ -14,4 +14,5 @@ public interface EventService {
     Event findById(@NotEmpty Integer eventId);
     Event findByEventName(String eventName);
     List<Event> findEventsByName(String eventName);
+
 }
