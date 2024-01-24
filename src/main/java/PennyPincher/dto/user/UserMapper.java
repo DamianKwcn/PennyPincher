@@ -1,5 +1,6 @@
 package PennyPincher.dto.user;
 
+import PennyPincher.dto.user.UserDto;
 import PennyPincher.entity.Role;
 import PennyPincher.entity.User;
 import PennyPincher.repository.RoleRepository;
