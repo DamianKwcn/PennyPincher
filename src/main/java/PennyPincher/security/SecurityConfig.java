@@ -17,11 +17,11 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class SecurityConfig {
 
         @Autowired
-        private UserDetailsService userDetailsService;
+        private final UserDetailsService userDetailsService;
 
-    public SecurityConfig(UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
+        public SecurityConfig(UserDetailsService userDetailsService) {
+            this.userDetailsService = userDetailsService;
+        }
 
         @Bean
         public static PasswordEncoder passwordEncoder(){
@@ -50,13 +50,12 @@ public class SecurityConfig {
             return http.build();
         }
 
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder());
-    }
-
+        @Autowired
+        public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+            auth
+                    .userDetailsService(userDetailsService)
+                    .passwordEncoder(passwordEncoder());
+        }
 }
 
 

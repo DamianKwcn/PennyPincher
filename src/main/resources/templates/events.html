@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Home Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+          crossorigin="anonymous"
+    >
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+        >
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse"
+             id="navbarSupportedContent"
+        >
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active"
+                       aria-current="page"
+                       th:href="@{/profile}">Profile</a
+                    >
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active"
+                       aria-current="page"
+                       th:href="@{/events}">Events</a
+                    >
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active"
+                       aria-current="page"
+                       th:href="@{/logout}">Logout</a
+                    >
+                </li>
+                <li class="nav-item ms-auto">
+                    <h5 class="nav-link active"
+                        style="color: orange"
+                        aria-current="page"
+                        th:text="'Logged in as: ' + ${loggedInUserName}"></h5
+                    >
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container">
+    <div class="row col-md-10 d-flex align-items-center">
+        <h2 class="me-3">Events List</h2>
+        <div class="input-group">
+            <form th:action="@{/events}"
+                  method="get"
+                  class="input-group"
+                  th:autocomplete="off"
+            >
+                <div id="search-autocomplete"
+                     class="form-outline"
+                     data-mdb-input-init
+                >
+                    <input type="search"
+                           name="eventName"
+                           class="form-control"
+                           placeholder="Search"
+                           aria-label="Search"
+                           aria-describedby="search-addon"
+                    />
+                    <label class="form-label visually-hidden"
+                           for="search-autocomplete">Search</label
+                    >
+                </div>
+                <button type="submit"
+                        class="btn btn-primary"
+                        data-mdb-ripple-init
+                >
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    <div th:if="${deleteError}"
+         class="alert alert-danger"
+         role="alert">
+        <p th:text="${deleteError}"></p
+        >
+    </div>
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+        <tr>
+            <th>Event</th>
+            <th>Event action</th>
+            <th>Creation date</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="event : ${events}">
+            <td th:text="${event.eventName}"></td>
+            <td>
+                <th:block th:if="${event.owner.username eq loggedInUserName}">
+                    <form th:action="@{/delete}"
+                          method="post"
+                    >
+                        <input
+                                type="hidden"
+                                name="eventId"
+                                th:value="${event.id}"
+                        />
+                        <button type="submit"
+                                class="btn btn-danger btn-sm"
+                                onclick="return confirm('Are you sure?')">Delete</button
+                        >
+                    </form>
+                </th:block>
+            </td>
+            <td th:text="${event.creationDate}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <br>
+    <a th:href="@{/newEvent}" class="btn btn-primary">Add Event</a>
+</div>
+</body>
+</html>
