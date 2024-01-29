@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -26,9 +28,24 @@ public class Event {
     @Column(name = "creation_date")
     private LocalDate creationDate;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE,
-            CascadeType.DETACH, CascadeType.REFRESH})
+    @ManyToOne
     @JoinColumn(name = "owner_id")
     private User owner;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "event_members",
+            joinColumns = @JoinColumn(name = "event_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> eventMembers = new ArrayList<>();
+
+    public void addEventMember(User user) {
+        this.eventMembers.add(user);
+    }
+
+    public void removeEventMember(User user) {
+        this.eventMembers.remove(user);
+    }
 }
 

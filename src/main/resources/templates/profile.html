@@ -51,5 +51,21 @@
     </div>
 </nav>
 <br>
+<div class="container">
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+        <tr>
+            <th>My Events</th>
+            <th>Owner</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="event : ${userEvents}">
+            <td th:text="${event.eventName}"></td>
+            <td th:text="${event.owner.username}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 </body>
 </html>

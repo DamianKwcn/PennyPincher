@@ -104,15 +104,13 @@
             <th>Creation date</th>
         </tr>
         </thead>
-
         <tbody>
         <tr th:each="event : ${events}">
             <td th:text="${event.eventName}"></td>
             <td>
                 <th:block th:if="${event.owner.username eq loggedInUserName}">
                     <form th:action="@{/delete}"
-                          method="post"
-                    >
+                          method="post">
                         <input
                                 type="hidden"
                                 name="eventId"
@@ -123,6 +121,25 @@
                                 onclick="return confirm('Are you sure?')">Delete</button
                         >
                     </form>
+                </th:block>
+                <a>
+
+                </a>
+                <th:block th:if="${event.owner.username eq loggedInUserName}">
+                    <a th:switch="${#lists.size(event.eventMembers)}">
+                        <span th:case="0">
+                            <a th:href="@{'/events/'+${event.id}+'/users'}"
+                               class="btn btn-sm btn-primary">
+                                Add participants
+                            </a>
+                        </span>
+                        <span th:case="*">
+                            <a th:href="@{/events/{id}/users(id=${event.id})}"
+                               class="btn btn-sm btn-primary">
+                                Participants
+                            </a>
+                        </span>
+                    </a>
                 </th:block>
             </td>
             <td th:text="${event.creationDate}"></td>

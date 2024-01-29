@@ -8,7 +8,6 @@ import java.util.List;
 
 @Service
 public interface EventService {
-
     void save(Event event);
     void deleteById(Integer eventId);
     List<Event> findAllEvents();

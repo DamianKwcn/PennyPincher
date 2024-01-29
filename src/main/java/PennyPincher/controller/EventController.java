@@ -13,6 +13,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -51,6 +52,7 @@ public class EventController {
     public String showEventAddingForm(Model model) {
         List<User> allUsers = userService.findAllUsers();
         model.addAttribute("newEvent", new EventDto());
+        model.addAttribute("allUsers", allUsers);
         model.addAttribute("loggedInUserName", userService.getCurrentlyLoggedInUser().getUsername());
         return "new-event";
     }
@@ -96,8 +98,52 @@ public class EventController {
         return "redirect:/events";
     }
 
+    @GetMapping("/events/{eventId}/users")
+    public String showEventUsers(@PathVariable("eventId") Integer eventId, Model model) {
+        Event event = eventService.findById(eventId);
+        List<User> allUsers = userService.findAll();
+        List<User> eventMembers = event.getEventMembers();
+        List<User> remainingUsers = new ArrayList<>();
+
+        model.addAttribute("event", event);
+
+        for (User u : allUsers) {
+            if (!eventMembers.contains(u)) {
+                remainingUsers.add(u);
+            }
+        }
+
+        model.addAttribute("add_id", eventId);
+        model.addAttribute("remove_id", eventId);
+        model.addAttribute("eventMembers", eventMembers);
+        model.addAttribute("remainingUsers", remainingUsers);
+        model.addAttribute("loggedInUserName", userService.getCurrentlyLoggedInUser().getUsername());
+        return "users";
+    }
+
+    @GetMapping("/events/{eventId}/addUser")
+    public String addUser(@PathVariable("eventId") Integer eventId, @RequestParam("userId") Integer userId) {
+        Event event = eventService.findById(eventId);
+        User user = userService.findById(userId);
+        event.addEventMember(user);
+        eventService.save(event);
+        user.addEvent(event);
+        userService.save(user);
+        return "redirect:/events/" + eventId + "/users";
+    }
+
+    @GetMapping("/events/{eventId}/removeUser")
+    public String removeUser(@PathVariable("eventId") Integer eventId, @RequestParam("userId") Integer userId) {
+        Event event = eventService.findById(eventId);
+        User user = userService.findById(userId);
+        event.removeEventMember(user);
+        eventService.save(event);
+        user.removeEvent(event);
+        userService.save(user);
+        return "redirect:/events/" + eventId + "/users";
+    }
+
     private boolean doesEventAlreadyExist(Event existingEvent) {
         return existingEvent != null && !existingEvent.getEventName().isBlank();
     }
-
-    }
+}

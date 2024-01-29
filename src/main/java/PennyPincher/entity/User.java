@@ -35,7 +35,17 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private List<Role> roles = new ArrayList<>();
 
+    @ManyToMany(mappedBy = "eventMembers",
+            fetch = FetchType.LAZY)
+    private List<Event> userEvents = new ArrayList<>();
 
+    public void addEvent(Event event) {
+        this.userEvents.add(event);
+    }
+
+    public void removeEvent(Event event) {
+        this.userEvents.remove(event);
+    }
 
 }
 

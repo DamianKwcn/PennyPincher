@@ -1,5 +1,6 @@
 package PennyPincher.controller;
 
+import PennyPincher.entity.Event;
 import PennyPincher.service.users.UserService;
 import PennyPincher.dto.user.UserDto;
 import PennyPincher.dto.user.UserMapper;
@@ -12,6 +13,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+
+import java.util.List;
 
 @Controller
 @AllArgsConstructor
@@ -47,6 +50,8 @@ public class UserController {
     @GetMapping("/profile")
     public String userProfile(Model model) {
         User loggedInUser = userService.getCurrentlyLoggedInUser();
+        List<Event> userEvents = loggedInUser.getUserEvents();
+        model.addAttribute("userEvents", userEvents);
         model.addAttribute("loggedInUserName", loggedInUser.getUsername());
         return "profile";
     }
