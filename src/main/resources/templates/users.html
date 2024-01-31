@@ -131,6 +131,12 @@
                            onclick="return confirm('Are you sure you want to remove user from this event?');">
                             Remove from Event
                         </a>
+                        <br>
+                        <a th:if="${event.owner.id != user.id}"
+                           th:href="@{'/events/'+${event.id}+'/setAsEventOwner/'+${user.id}}"
+                           onclick="return confirm('Are you sure you want to change owner?');">
+                            Set As Event Owner
+                        </a>
                     </td>
                 </tr>
                 </tbody>

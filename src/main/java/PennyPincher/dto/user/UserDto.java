@@ -1,5 +1,6 @@
 package PennyPincher.dto.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
@@ -11,6 +12,7 @@ import lombok.*;
 @ToString
 public class UserDto {
 
+    @JsonIgnore
     private int idUser;
 
     @NotBlank
