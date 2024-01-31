@@ -143,6 +143,18 @@ public class EventController {
         return "redirect:/events/" + eventId + "/users";
     }
 
+    @GetMapping("/events/{eventId}/setAsEventOwner/{userId}")
+    public String setAsEventOwner(@PathVariable("eventId") Integer eventId,
+                                  @PathVariable("userId") Integer userId,
+                                  Model model) {
+        Event event = eventService.findById(eventId);
+        User user = userService.findById(userId);
+        event.setOwner(user);
+        eventService.save(event);
+        model.addAttribute("loggedInUserName", user.getUsername());
+        return "redirect:/events";
+    }
+
     private boolean doesEventAlreadyExist(Event existingEvent) {
         return existingEvent != null && !existingEvent.getEventName().isBlank();
     }
