@@ -19,7 +19,6 @@ import java.util.List;
 @Controller
 @AllArgsConstructor
 public class UserController {
-
     private final UserService userService;
     private final UserMapper userMapper;
 

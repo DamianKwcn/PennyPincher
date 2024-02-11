@@ -43,5 +43,4 @@ public class EventServiceImpl implements EventService {
         eventRepository.deleteById(eventId);
     }
 
-
 }

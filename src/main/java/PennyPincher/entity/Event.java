@@ -1,19 +1,21 @@
 package PennyPincher.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "events")
+@Builder
 @Getter
 @Setter
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "events")
 public class Event {
 
     @Id
@@ -28,6 +30,10 @@ public class Event {
     @Column(name = "creation_date")
     private LocalDate creationDate;
 
+    @JsonIgnore
+    @Column(name = "eventBalance")
+    private BigDecimal eventBalance;
+
     @ManyToOne
     @JoinColumn(name = "owner_id")
     private User owner;
@@ -40,12 +46,35 @@ public class Event {
     )
     private List<User> eventMembers = new ArrayList<>();
 
+    @OneToMany(mappedBy = "event", cascade = {CascadeType.PERSIST, CascadeType.MERGE,
+            CascadeType.DETACH, CascadeType.REFRESH,CascadeType.REMOVE})
+    private List<Expense> expenses;
+
     public void addEventMember(User user) {
         this.eventMembers.add(user);
     }
 
     public void removeEventMember(User user) {
         this.eventMembers.remove(user);
+    }
+
+    public void addExpense(Expense expense) {
+        this.expenses.add(expense);
+    }
+
+    public void removeExpense(Expense expense) {
+        this.expenses.remove(expense);
+    }
+
+    @Override
+    public String toString() {
+        return "Event{" +
+                "eventName='" + eventName + '\'' +
+                ", eventBalance=" + eventBalance +
+                ", owner=" + owner.getFirstName() +
+                ", eventMembers=" + eventMembers +
+                ", expenses=" + expenses +
+                '}';
     }
 }
 
