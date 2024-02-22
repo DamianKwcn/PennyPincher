@@ -7,7 +7,6 @@ import PennyPincher.repository.EventRepository;
 import PennyPincher.repository.ExpenseRepository;
 import PennyPincher.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -19,11 +18,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@Data
-@Service
 @AllArgsConstructor
+@Service
 public class ExpenseServiceImpl implements ExpenseService {
-
     private ExpenseRepository expenseRepository;
     private EventRepository eventRepository;
     private UserRepository userRepository;
@@ -35,15 +32,20 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
+    public void save(Expense expense) {
+        expenseRepository.save(expense);
+    }
+
+    @Override
+    public void deleteById(Integer expenseId) {
+        expenseRepository.deleteById(expenseId);
+    }
+
+    @Override
     public List<Expense> findExpensesForGivenEvent(Integer eventId) {
         return expenseRepository.findAll().stream()
                 .filter(expense -> eventId.equals(expense.getEvent().getId()))
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public void save(Expense expense) {
-        expenseRepository.save(expense);
     }
 
     @Override
@@ -54,8 +56,12 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public void deleteById(Integer expenseId) {
-        expenseRepository.deleteById(expenseId);
+    public Map<Integer, BigDecimal> mapUserToCost(Expense expense) {
+        Map<Integer, BigDecimal> mapUserPerCost = new HashMap<>();
+        expense.getParticipants().forEach(participant -> mapUserPerCost.put(participant.getId(),
+                sumParticipantCosts(expense, participant)
+        ));
+        return mapUserPerCost;
     }
 
     @Override
@@ -88,6 +94,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     private BigDecimal sumParticipantPayoffs(Expense expense, User participant) {
         return expense.getPayoffs().stream()
+                .filter(Objects::nonNull)
                 .filter(payoff -> participant.getId().equals(payoff.getUserPaying().getId()))
                 .map(Payoff::getPayoffAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -95,6 +102,19 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     private BigDecimal calculateParticipantBalance(Expense expense, User participant) {
         BigDecimal payoffsSum = sumParticipantPayoffs(expense, participant);
-        return payoffsSum.subtract(expense.getCostPerParticipant());
+        Map<Integer, BigDecimal> costPerUser = expense.getCostPerUser();
+        BigDecimal participantPayoff = costPerUser.get(participant.getId());
+
+        if (costPerUser.containsKey(participant.getId()) && !Objects.equals(participantPayoff, BigDecimal.ZERO)) {
+            return payoffsSum.subtract(participantPayoff);
+        }
+        return payoffsSum;
+    }
+
+    private BigDecimal sumParticipantCosts(Expense expense, User participant) {
+        return expense.getCostPerUser().entrySet().stream()
+                .filter(costMap -> participant.getId().equals(costMap.getKey()))
+                .map(Map.Entry::getValue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

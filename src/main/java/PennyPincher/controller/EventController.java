@@ -9,6 +9,7 @@ import PennyPincher.service.events.EventService;
 import PennyPincher.service.expenses.ExpenseService;
 import PennyPincher.service.users.UserService;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,8 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Data
 @Controller
-@AllArgsConstructor
 public class EventController {
     private final EventService eventService;
     private final UserService userService;
@@ -31,7 +32,6 @@ public class EventController {
     @GetMapping("/events")
     public String events(@RequestParam(name = "eventName", required = false) String eventName,
                          Model model) {
-
         List<Event> events;
 
         if (eventName != null && !eventName.isEmpty()) {
@@ -46,16 +46,16 @@ public class EventController {
     }
 
     @GetMapping("/events/{eventId}")
-    public String eventDetails(@PathVariable("eventId") Integer eventId, Model model) {
+    public String eventDetails(@PathVariable("eventId") Integer eventId,
+                               Model model) {
         Event event = eventService.findById(eventId);
         model.addAttribute("event", event);
         return "event";
     }
 
-
     @GetMapping("/newEvent")
     public String showEventAddingForm(Model model) {
-        List<User> allUsers = userService.findAllUsers();
+        List<User> allUsers = userService.findAll();
         model.addAttribute("newEvent", new EventDto());
         model.addAttribute("allUsers", allUsers);
         model.addAttribute("loggedInUserName", userService.getCurrentlyLoggedInUser().getUsername());
@@ -88,7 +88,8 @@ public class EventController {
     }
 
     @GetMapping("/delete")
-    public String deleteEvent(@RequestParam("eventId") Integer eventId, Model model) {
+    public String deleteEvent(@RequestParam("eventId") Integer eventId,
+                              Model model) {
         Event event = eventService.findById(eventId);
         User user = userService.getCurrentlyLoggedInUser();
 
@@ -106,7 +107,8 @@ public class EventController {
     }
 
     @GetMapping("/events/{eventId}/users")
-    public String showEventUsers(@PathVariable("eventId") Integer eventId, Model model) {
+    public String showEventUsers(@PathVariable("eventId") Integer eventId,
+                                 Model model) {
         Event event = eventService.findById(eventId);
         List<User> allUsers = userService.findAll();
         List<User> eventMembers = event.getEventMembers();
@@ -132,8 +134,8 @@ public class EventController {
 
     @GetMapping("/events/{eventId}/expenses")
     public String showEventExpenses(@PathVariable("eventId") Integer eventId,
+                                    @RequestParam(value = "errorMessage", required = false) String errorMessage,
                                     Model model) {
-
         Event event = eventService.findById(eventId);
         List<User> allUsers = userService.findAll();
         List<User> eventMembers = event.getEventMembers();
@@ -144,8 +146,11 @@ public class EventController {
         for (Expense expense : eventExpenses) {
             Map<Integer, BigDecimal> payoffAmountPerParticipant = expenseService.mapUserToPayoffAmount(expense);
             Map<Integer, BigDecimal> balancePerParticipant = expenseService.mapUserToBalance(expense);
-            expense.setPayoffAmountPerUser(payoffAmountPerParticipant);
+            Map<Integer, BigDecimal> costPerParticipant = expenseService.mapUserToCost(expense);
+            expense.setCostPerUser(costPerParticipant);
+            expense.setPayoffPerUser(payoffAmountPerParticipant);
             expense.setBalancePerUser(balancePerParticipant);
+            expenseService.save(expense);
         }
 
         for (User u : allUsers) {
@@ -158,6 +163,10 @@ public class EventController {
         event.setEventBalance(updatedBalance);
         eventService.save(event);
 
+        if (errorMessage != null) {
+            model.addAttribute("errorMessage", errorMessage);
+        }
+
         model.addAttribute("user", user);
         model.addAttribute("event", event);
         model.addAttribute("add_id", eventId);
@@ -167,7 +176,6 @@ public class EventController {
         model.addAttribute("eventExpenses", eventExpenses);
         model.addAttribute("updatedBalance", updatedBalance);
         model.addAttribute("loggedInUserName", userService.getCurrentlyLoggedInUser().getUsername());
-
         return "expenses";
     }
 
@@ -205,30 +213,6 @@ public class EventController {
         eventService.save(event);
         model.addAttribute("loggedInUserName", user.getUsername());
         return "redirect:/events";
-    }
-
-    @GetMapping("/events/{eventId}/addExpense")
-    public String addExpense(@PathVariable("eventId") Integer eventId,
-                             @RequestParam("expenseId") Integer expenseId) {
-        Event event = eventService.findById(eventId);
-        Expense expense = expenseService.findById(expenseId);
-        event.addExpense(expense);
-        eventService.save(event);
-        expense.addEvent(event);
-        expenseService.save(expense);
-        return "redirect:/events/" + eventId + "/expenses";
-    }
-
-    @GetMapping("/events/{eventId}/removeExpense")
-    public String removeExpense(@PathVariable("eventId") Integer eventId,
-                                @RequestParam("expenseId") Integer expenseId) {
-        Event event = eventService.findById(eventId);
-        Expense expense = expenseService.findById(expenseId);
-        event.removeExpense(expense);
-        eventService.save(event);
-        expense.removeEvent();
-        expenseService.save(expense);
-        return "redirect:/events/" + eventId + "/expenses";
     }
 
     private BigDecimal calculateUpdatedBalanceForEvent(List<Expense> eventExpenses) {

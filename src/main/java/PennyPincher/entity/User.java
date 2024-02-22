@@ -10,17 +10,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Entity
-@Table(name = "users")
 @Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
+@Entity
+@Table(name = "users")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
     @Column(name = "user_id")
     private Integer id;
 
@@ -59,28 +61,6 @@ public class User {
     public void removeEvent(Event event) {
         this.userEvents.remove(event);
     }
-
-    public void addExpense(Expense expense) {
-        this.expenses.add(expense);
-    }
-
-    public void removeExpense(Expense expense) {
-        this.expenses.remove(expense);
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "firstName='" + firstName + '\'' +
-                ", username='" + username + '\'' +
-                ", balance=" + balance +
-                ", roles=" + roles.size() +
-                ", userEvents=" + userEvents.size() +
-                ", expenses=" + expenses.size() +
-                ", payoffs=" + payoffs.size() +
-                '}';
-    }
-
 }
 
 

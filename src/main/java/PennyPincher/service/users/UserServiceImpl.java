@@ -1,6 +1,7 @@
 package PennyPincher.service.users;
 
-import PennyPincher.dto.expense.ExpenseDto;
+import PennyPincher.dto.expense.CustomExpenseDto;
+import PennyPincher.dto.expense.SplitExpenseDto;
 import PennyPincher.entity.Event;
 import PennyPincher.entity.Expense;
 import PennyPincher.entity.User;
@@ -14,14 +15,13 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
-
-    private final EventService eventService;
     private final UserRepository userRepository;
 
     @Override
@@ -52,39 +52,28 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public BigDecimal calculateUserBalance(Integer userId) {
-        User foundUser = userRepository.findById(userId).orElseThrow();
-
-        List<Event> eventsWithUserAsParticipant = eventService.findAllEvents().stream()
-                .filter(event -> event.getEventMembers().contains(foundUser))
-                .collect(Collectors.toList());
-
-        List<Expense> expensesWithUserAsParticipant = eventsWithUserAsParticipant.stream()
-                .map(Event::getExpenses)
-                .flatMap(List::stream)
-                .filter(expense -> expense.getParticipants().contains(foundUser))
-                .collect(Collectors.toList());
-
-        return expensesWithUserAsParticipant.stream()
-                .map(Expense::getCostPerParticipant)
-                .reduce(BigDecimal.ZERO, BigDecimal::subtract);
-    }
-
-    @Override
-    public TreeSet<User> getUsersByNames(ExpenseDto expenseDto) {
+    public List<User> getUsersByNames(SplitExpenseDto splitExpenseDto) {
         TreeSet<User> participants = new TreeSet<User>(new UsernameComparator());
-        if (expenseDto.getParticipantUsername() != null) {
-            String[] splitUsernames = expenseDto.getParticipantUsername().split("[,]", 0);
+        if (splitExpenseDto.getParticipantUsername() != null) {
+            String[] splitUsernames = splitExpenseDto.getParticipantUsername().split("[,]", 0);
             for (String username : splitUsernames) {
                 User foundUser = this.findByUsername(username);
                 participants.add(foundUser);
             }
         }
-        return participants;
+        return participants.stream().sorted(new UsernameComparator()).collect(Collectors.toList());
     }
 
-    public List<User> findAllUsers() {
-        return userRepository.findAll();
+    @Override
+    public List<User> getUsersByNames(CustomExpenseDto customExpenseDto) {
+        TreeSet<User> participants = new TreeSet<User>(new UsernameComparator());
+        if (customExpenseDto.getParticipantsNames() != null) {
+            Set<User> retrievedUsers = customExpenseDto.getParticipantsNames().stream()
+                    .map(this::findByUsername)
+                    .collect(Collectors.toSet());
+            participants.addAll(retrievedUsers);
+        }
+        return participants.stream().sorted(new UsernameComparator()).collect(Collectors.toList());
     }
 
 }

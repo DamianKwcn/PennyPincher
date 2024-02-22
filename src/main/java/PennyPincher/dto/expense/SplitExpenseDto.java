@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class ExpenseDto {
+public class SplitExpenseDto {
 
     @NotBlank
     private String name;

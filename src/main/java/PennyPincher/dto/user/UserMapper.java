@@ -7,12 +7,12 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Component
 @AllArgsConstructor
 public class UserMapper {
-
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
 
@@ -26,6 +26,7 @@ public class UserMapper {
                 .firstName(userDto.getFirstName())
                 .username(userDto.getUsername())
                 .password(passwordEncoder.encode(userDto.getPassword()))
+                .balance(BigDecimal.ZERO)
                 .roles(List.of(role))
                 .build();
     }

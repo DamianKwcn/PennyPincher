@@ -11,12 +11,14 @@ import java.math.BigDecimal;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 @Entity
-@Table( name = "payoff")
+@Table(name = "payoff")
 public class Payoff {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
     @Column(name = "payoff_id")
     private Integer id;
 
@@ -30,13 +32,4 @@ public class Payoff {
 
     @Column(name = "payoff_amount", nullable = false)
     private BigDecimal payoffAmount;
-
-    @Override
-    public String toString() {
-        return "Payoff{" +
-                "expensePaid= " + expensePaid.getName() +
-                ", userPaying= " + userPaying.getFirstName() +
-                ", payoffAmount=" + payoffAmount +
-                '}';
-    }
 }
