@@ -15,6 +15,7 @@ public interface ExpenseService {
     Expense findById(Integer expenseId);
     List<Expense> findExpensesForGivenEvent(Integer eventId);
     BigDecimal splitCostEquallyPerParticipants(BigDecimal amount, long participantsNumber);
+    Map<Integer, BigDecimal> mapUserToCost(Expense expense);
     Map<Integer, BigDecimal> mapUserToPayoffAmount(Expense expense);
     Map<Integer, BigDecimal> mapUserToBalance(Expense expense);
     Expense findByExpenseNameAndEventId(String expenseName, Integer eventId);

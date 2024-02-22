@@ -50,7 +50,7 @@
                     <h5 class="nav-link active"
                         style="color: orange"
                         aria-current="page"
-                        th:text = "'Logged in as: ' + ${loggedInUserName}"></h5
+                        th:text="'Logged in as: ' + ${loggedInUserName}"></h5
                     >
                 </li>
             </ul>
@@ -82,7 +82,7 @@
                                     th:field="*{eventName}"
                                     type="text"
                             />
-                            <p th:errors = "*{eventName}"
+                            <p th:errors="*{eventName}"
                                class="text-danger"
                                th:if="${#fields.hasErrors('eventName')}"></p
                             >

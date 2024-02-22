@@ -1,11 +1,11 @@
 package PennyPincher.controller;
 
-import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+@Data
 @Controller
-@AllArgsConstructor
 public class LoginController {
 
     @GetMapping("/")
@@ -17,5 +17,4 @@ public class LoginController {
     public String login() {
         return "login";
     }
-
 }

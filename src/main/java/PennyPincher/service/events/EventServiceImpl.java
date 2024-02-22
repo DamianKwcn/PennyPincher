@@ -7,10 +7,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 @AllArgsConstructor
+@Service
 public class EventServiceImpl implements EventService {
-
     private final EventRepository eventRepository;
 
     @Override
