@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Data
@@ -50,8 +51,12 @@ public class UserController {
     public String userProfile(Model model) {
         User loggedInUser = userService.getCurrentlyLoggedInUser();
         List<Event> userEvents = loggedInUser.getUserEvents();
+
+        userEvents.sort(Comparator.comparing(Event::getEventBalance));
+
         model.addAttribute("userEvents", userEvents);
         model.addAttribute("loggedInUserName", loggedInUser.getUsername());
+        model.addAttribute("userBalance", loggedInUser.getBalance());
         return "profile";
     }
 
