@@ -6,8 +6,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
           rel="stylesheet"
           integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
-          crossorigin="anonymous"
-    >
+          crossorigin="anonymous">
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -51,21 +50,79 @@
     </div>
 </nav>
 <br>
-<div class="container">
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-        <tr>
-            <th>My Events</th>
-            <th>Owner</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="event : ${userEvents}">
-            <td th:text="${event.eventName}"></td>
-            <td th:text="${event.owner.username}"></td>
-        </tr>
-        </tbody>
-    </table>
+<div class="text-center">
+    <h1>My Profile Page</h1>
 </div>
+<br><br>
+<div class="d-flex justify-content-between">
+    <div style="margin: 0 200px;">
+        <div class="text-center">
+            <h1>My Total Debt</h1>
+            <h3 th:text="${userBalance}"></h3>
+        </div>
+    </div>
+    <div class="container" style="width: calc(100% - 900px);">
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+            <tr>
+                <th>Events I'm participating</th>
+                <th>My debt in each Event</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="event : ${userEvents}">
+                <td th:text="${event.eventName}"></td>
+                <td th:text="${event.eventBalance}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="container">
+    <canvas id="eventBarChart" width="400" height="300"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var ctx = document.getElementById('eventBarChart').getContext('2d');
+    var eventNames = /*[[${#strings.arrayJoin(userEvents.![eventName], ",") }]]*/;
+    var userBalances = /*[[${#strings.arrayJoin(userEvents.![eventBalance], ",") }]]*/;
+
+    var eventBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: eventNames.split(','),
+            datasets: [{
+                label: 'Show',
+                data: userBalances.split(','),
+                maxBarThickness: 80,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderWidth: 1
+
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Events'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'My Debt'
+                    },
+                    reverse: true
+                }
+            }
+        }
+    });
+    /*]]>*/
+</script>
 </body>
 </html>
