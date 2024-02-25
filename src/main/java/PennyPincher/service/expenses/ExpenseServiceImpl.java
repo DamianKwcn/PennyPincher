@@ -22,8 +22,6 @@ import java.util.stream.Collectors;
 @Service
 public class ExpenseServiceImpl implements ExpenseService {
     private ExpenseRepository expenseRepository;
-    private EventRepository eventRepository;
-    private UserRepository userRepository;
 
     @Override
     public Expense findById(Integer expenseId) {
