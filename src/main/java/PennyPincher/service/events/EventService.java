@@ -1,6 +1,7 @@
 package PennyPincher.service.events;
 
 import PennyPincher.entity.Event;
+import PennyPincher.entity.User;
 import jakarta.validation.constraints.NotEmpty;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +13,5 @@ public interface EventService {
     void deleteById(Integer eventId);
     List<Event> findAllEvents();
     Event findById(@NotEmpty Integer eventId);
-    Event findByEventName(String eventName);
-    List<Event> findEventsByName(String eventName);
-
+    Event findByEventNameAndOwner(String eventName, User owner);
 }

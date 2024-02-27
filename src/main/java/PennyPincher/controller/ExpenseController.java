@@ -128,6 +128,8 @@ public class ExpenseController {
         Expense foundExpense = expenseService.findById(expenseId);
         User foundUser = userService.findById(userId);
 
+        String errorMessage = null;
+
         BigDecimal paidOffFromInput = paidOffAmount == null
                 ? BigDecimal.ZERO.setScale(2, RoundingMode.CEILING)
                 : new BigDecimal(paidOffAmount.replaceAll(",", ".")).setScale(2, RoundingMode.CEILING);
@@ -142,15 +144,16 @@ public class ExpenseController {
         if (foundExpense.getTotalCost() != null) {
             foundExpense.setExpenseBalance(foundExpense.getExpenseBalance().add(paidOffFromInput));
         }
-
-        if (userBalance.compareTo(BigDecimal.ZERO) > 0) {
-            String errorMessage = "Too big amount of paid off";
-            return "redirect:/events/" + eventId + "/expenses?errorMessage=" + errorMessage;
-        }
-
         foundExpense.getPayoffs().add(payoff);
         foundUser.getPayoffs().add(payoff);
         foundUser.setBalance(userBalance);
+
+        if (userBalance.compareTo(BigDecimal.ZERO) > 0) {
+            errorMessage = "Too big amount of paid off";
+        }
+        if (errorMessage != null) {
+            return "redirect:/events/" + eventId + "/expenses?errorMessage=" + errorMessage;
+        }
 
         userService.save(foundUser);
         expenseService.save(foundExpense);
@@ -168,10 +171,13 @@ public class ExpenseController {
         Event foundEvent = eventService.findById(eventId);
         Expense foundExpense = expenseService.findById(expenseId);
         Map<Integer, BigDecimal> costPerParticipant = foundExpense.getCostPerUser();
+        Map<Integer, BigDecimal> payoffPerParticipant = foundExpense.getPayoffPerUser();
 
         foundExpense.getParticipants().forEach(participant -> {
-            participant.setBalance(participant.getBalance().add(costPerParticipant.get(participant.getId())));
-            participant.getExpenses().removeIf(expense -> participant.getExpenses().contains(expense));
+            BigDecimal participantBalanceChange = costPerParticipant.getOrDefault(participant.getId(), BigDecimal.ZERO)
+                    .subtract(payoffPerParticipant.getOrDefault(participant.getId(), BigDecimal.ZERO));
+            participant.setBalance(participant.getBalance().add(participantBalanceChange));
+            participant.getExpenses().removeIf(expense -> expense.getId().equals(expenseId));
             userService.save(participant);
         });
 

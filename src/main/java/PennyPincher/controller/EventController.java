@@ -32,16 +32,11 @@ public class EventController {
     @GetMapping("/events")
     public String events(@RequestParam(name = "eventName", required = false) String eventName,
                          Model model) {
-        List<Event> events;
-
-        if (eventName != null && !eventName.isEmpty()) {
-            events = eventService.findEventsByName(eventName);
-        } else {
-            events = eventService.findAllEvents();
-        }
+        List<Event> events = eventService.findAllEvents();
+        User loggedInUser = userService.getCurrentlyLoggedInUser();
 
         model.addAttribute("events", events);
-        model.addAttribute("loggedInUserName", userService.getCurrentlyLoggedInUser().getUsername());
+        model.addAttribute("loggedInUserName", loggedInUser.getUsername());
         return "events";
     }
 
@@ -66,16 +61,19 @@ public class EventController {
     public String createEvent(@ModelAttribute("newEvent") EventDto eventDto,
                               Model model,
                               BindingResult result) {
-        Event existingEvent = eventService.findByEventName(eventDto.getEventName());
+        User user = userService.getCurrentlyLoggedInUser();
+        model.addAttribute("loggedInUserName", user.getUsername());
 
-        if (doesEventAlreadyExist(existingEvent)) {
+        Event existingEvent = eventService.findByEventNameAndOwner(eventDto.getEventName(), user);
+
+        if (existingEvent != null) {
             result.addError(new FieldError("newEvent", "eventName",
-                    "Event '" + existingEvent.getEventName() + "' already exists."));
+                    "You already have an event with the name '" + existingEvent.getEventName() + "'. Please choose a different name."));
         }
 
         if (eventDto.getEventName().isBlank()) {
             result.addError(new FieldError("newEvent", "eventName",
-                    "Event name field cannot be empty."));
+                    "Event name field cannot be blank."));
         }
 
         if (result.hasErrors()) {
@@ -220,9 +218,4 @@ public class EventController {
                 .flatMap(expense -> expense.getBalancePerUser().values().stream())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
-
-    private boolean doesEventAlreadyExist(Event existingEvent) {
-        return existingEvent != null && !existingEvent.getEventName().isBlank();
-    }
-
 }
