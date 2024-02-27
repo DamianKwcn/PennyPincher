@@ -1,7 +1,9 @@
 package PennyPincher.service.events;
 
 import PennyPincher.entity.Event;
+import PennyPincher.entity.User;
 import PennyPincher.repository.EventRepository;
+import PennyPincher.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -28,18 +30,12 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Event findByEventName(String eventName) {
-        return eventRepository.findByEventName(eventName);
-    }
-
-    @Override
-    public List<Event> findEventsByName(String eventName) {
-        return eventRepository.findByEventNameContainingIgnoreCase(eventName);
+    public Event findByEventNameAndOwner(String eventName, User owner) {
+        return eventRepository.findByEventNameAndOwner(eventName, owner);
     }
 
     @Override
     public void deleteById(Integer eventId) {
         eventRepository.deleteById(eventId);
     }
-
 }

@@ -96,7 +96,7 @@
                                  th:with="singleParticipant = ${participant}">
                                 <p>
                                     <span th:text="${singleParticipant.username}"></span>
-                                    <span>
+                                    <span th:if="${singleParticipant.username == loggedInUserName}">
                                         <button class="btn btn-primary btn-sm float-end"
                                                 data-bs-toggle="modal"
                                                 th:data-bs-target="'#paidOffModal-' + ${expense.id} + ${singleParticipant.id}">
