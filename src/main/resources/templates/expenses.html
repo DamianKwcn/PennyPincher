@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+          crossorigin="anonymous">
+    <title>Registration and Login System</title>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse"
+             id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active"
+                       aria-current="page"
+                       th:href="@{/profile}">Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active"
+                       aria-current="page"
+                       th:href="@{/events}">Events</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active"
+                       aria-current="page"
+                       th:href="@{/logout}">Logout</a>
+                </li>
+                <li class="nav-item ms-auto">
+                    <h5 class="nav-link active"
+                        style="color: orange"
+                        aria-current="page"
+                        th:text = "'Logged in as: ' + ${user.firstName}"></h5>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container">
+    <div class="row col-md-10">
+        <div class="card">
+            <div class="card-body">
+                <h2 th:text="'Expenses of Event: ' + ${event.eventName}"></h2>
+
+                <h2 th:text="'Total Balance: ' + ${updatedBalance}"></h2>
+
+                <a th:href="@{'/events/' + ${eventId} + '/newSplitExpense'}" class="btn btn-primary">
+                    Create Split Expense
+                </a>
+                <a th:href="@{'/events/' + ${eventId} + '/newCustomExpense'}" class="btn btn-primary">
+                    Create Custom Expense
+                </a>
+                <a th:href="@{'/events'}"
+                   class="btn btn-secondary">
+                    Back to Events List
+                </a>
+                <br>
+                <br>
+                <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+                    <p th:text="${errorMessage}"></p>
+                </div>
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Expense Name</th>
+                        <th>Total cost</th>
+                        <th>Expense participants</th>
+                        <th>Cost per participant</th>
+                        <th>Already paid off</th>
+                        <th>Balance</th>
+                        <th>Delete</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="expense : ${eventExpenses}">
+                        <td th:text="${expense.name}"></td>
+                        <td th:text="${expense.totalCost}"></td>
+                        <td>
+                            <div th:each="participant : ${expense.participants}"
+                                 th:with="singleParticipant = ${participant}">
+                                <p>
+                                    <span th:text="${singleParticipant.username}"></span>
+                                    <span th:if="${singleParticipant.username == loggedInUserName}">
+                                        <button class="btn btn-primary btn-sm float-end"
+                                                data-bs-toggle="modal"
+                                                th:data-bs-target="'#paidOffModal-' + ${expense.id} + ${singleParticipant.id}">
+                                            Add paid off amount
+                                        </button>
+                                    </span>
+                                </p>
+                            </div>
+                            <p th:if="${expense.participants.isEmpty()}">No participants</p>
+                        </td>
+                        <td>
+                            <div th:each="entry : ${expense.costPerUser}">
+                                <p>
+                                    <span th:text="${entry.value}"></span>
+                                </p>
+                            </div>
+                        </td>
+                        <td>
+                            <div th:each="entry : ${expense.payoffPerUser}">
+                                <p>
+                                    <span th:text="${entry.value}"></span>
+                                </p>
+                            </div>
+                        </td>
+                        <td>
+                            <p th:each="entry : ${expense.balancePerUser}">
+                                <span th:if="${entry.value != null}"
+                                      th:text="${entry.value}"
+                                      th:style="${entry.value} < 0 ? 'color: red' : 'color: green'">
+                                </span>
+                            </p>
+                        </td>
+                        <td>
+                            <a th:href="@{/events/{eventId}/expenses/{expenseId}/delete(eventId=${eventId}, expenseId=${expense.id})}"
+                               class="btn btn-danger btn-sm"
+                               onclick="if (!(confirm('Are you sure?'))) return false">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div th:each="expense : ${eventExpenses}">
+                    <div th:each="participant : ${expense.participants}" th:with="singleParticipant = ${participant}">
+                        <div class="col-md-12">
+                            <div th:id="'paidOffModal-' + ${expense.id} + ${singleParticipant.id}"
+                                 class="modal fade bg-dark"
+                                 role="dialog">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1>How much user already paid off?</h1>
+                                        </div>
+                                        <div class="modal-body">
+                                            <table class="table table-bordered table-hover">
+                                                <thead class="table-dark">
+                                                <tr>
+                                                    <th>First Name</th>
+                                                    <th>Username</th>
+                                                    <th>Paid off amount</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr>
+                                                    <td th:text="${singleParticipant.firstName}"></td>
+                                                    <td th:text="${singleParticipant.username}"></td>
+                                                    <td>
+                                                        <form th:action="@{'/events/' + ${eventId} + '/expenses/' + ${expense.id} + '/users/' + ${singleParticipant.id}}">
+                                                            <label for="paidOffAmount">
+                                                                Enter how much you've already paid off
+                                                            </label>
+                                                            <input type="text" id="paidOffAmount"
+                                                                   th:name="paidOffAmount"
+                                                            pattern="[0-9]+(\.[0-9]+)?"
+                                                            title="Enter proper value for paidoff amount."/>
+                                                            <button type="submit">Add</button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button class="btn btn-default"
+                                                    data-bs-dismiss="modal"
+                                                    value="Close"></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous">
+</script>
+</body>
+</html>
