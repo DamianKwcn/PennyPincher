@@ -130,7 +130,7 @@ public class ExpenseController {
 
         String errorMessage = null;
 
-        BigDecimal paidOffFromInput = paidOffAmount == null
+        BigDecimal paidOffFromInput = (paidOffAmount == null || paidOffAmount.isEmpty())
                 ? BigDecimal.ZERO.setScale(2, RoundingMode.CEILING)
                 : new BigDecimal(paidOffAmount.replaceAll(",", ".")).setScale(2, RoundingMode.CEILING);
         BigDecimal userBalance = foundUser.getBalance().add(paidOffFromInput);
