@@ -38,4 +38,9 @@ public class EventServiceImpl implements EventService {
     public void deleteById(Integer eventId) {
         eventRepository.deleteById(eventId);
     }
+
+    @Override
+    public List<Event> findEventsByUser(User user) {
+        return eventRepository.findEventsByOwnerOrEventMembers(user, user);
+    }
 }

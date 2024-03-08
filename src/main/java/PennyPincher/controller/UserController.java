@@ -52,6 +52,7 @@ public class UserController {
         User loggedInUser = userService.getCurrentlyLoggedInUser();
         List<Event> userEvents = loggedInUser.getUserEvents();
 
+        userEvents.removeIf(event -> event.getEventBalance() == null);
         userEvents.sort(Comparator.comparing(Event::getEventBalance));
 
         model.addAttribute("userEvents", userEvents);
