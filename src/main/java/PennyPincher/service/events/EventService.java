@@ -14,4 +14,5 @@ public interface EventService {
     List<Event> findAllEvents();
     Event findById(@NotEmpty Integer eventId);
     Event findByEventNameAndOwner(String eventName, User owner);
+    List<Event> findEventsByUser(User user);
 }

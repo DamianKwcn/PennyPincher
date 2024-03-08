@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Data
 @Controller
@@ -32,8 +33,9 @@ public class EventController {
     @GetMapping("/events")
     public String events(@RequestParam(name = "eventName", required = false) String eventName,
                          Model model) {
-        List<Event> events = eventService.findAllEvents();
         User loggedInUser = userService.getCurrentlyLoggedInUser();
+
+        List<Event> events = eventService.findEventsByUser(loggedInUser);
 
         model.addAttribute("events", events);
         model.addAttribute("loggedInUserName", loggedInUser.getUsername());
