@@ -1,6 +1,7 @@
 package PennyPincher.controller;
 
 import PennyPincher.entity.Event;
+import PennyPincher.entity.Expense;
 import PennyPincher.service.users.UserService;
 import PennyPincher.dto.user.UserDto;
 import PennyPincher.dto.user.UserMapper;
@@ -14,8 +15,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Data
 @Controller
@@ -51,11 +55,15 @@ public class UserController {
     public String userProfile(Model model) {
         User loggedInUser = userService.getCurrentlyLoggedInUser();
         List<Event> userEvents = loggedInUser.getUserEvents();
+        Set<Expense> expenses = loggedInUser.getExpenses();
 
         userEvents.removeIf(event -> event.getEventBalance() == null);
         userEvents.sort(Comparator.comparing(Event::getEventBalance));
 
+        Map<Event, BigDecimal> balanceInEachEvent = userService.balanceInEachEvent(loggedInUser, userEvents, expenses);
+
         model.addAttribute("userEvents", userEvents);
+        model.addAttribute("balanceInEachEvent", balanceInEachEvent);
         model.addAttribute("loggedInUserName", loggedInUser.getUsername());
         model.addAttribute("userBalance", loggedInUser.getBalance());
         return "profile";
