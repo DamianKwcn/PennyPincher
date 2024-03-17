@@ -1,12 +1,13 @@
 package PennyPincher.controller;
 
 import PennyPincher.dto.expense.CustomExpenseDto;
-import PennyPincher.dto.expense.SplitExpenseDto;
 import PennyPincher.dto.expense.ExpenseMapper;
+import PennyPincher.dto.expense.SplitExpenseDto;
 import PennyPincher.entity.Event;
 import PennyPincher.entity.Expense;
 import PennyPincher.entity.Payoff;
 import PennyPincher.entity.User;
+import PennyPincher.exception.UserNotFoundException;
 import PennyPincher.repository.EventRepository;
 import PennyPincher.repository.ExpenseRepository;
 import PennyPincher.repository.UserRepository;
@@ -14,7 +15,9 @@ import PennyPincher.service.events.EventService;
 import PennyPincher.service.expenses.ExpenseService;
 import PennyPincher.service.payoffs.PayoffService;
 import PennyPincher.service.users.UserService;
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -23,20 +26,21 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-@Data
+@RequiredArgsConstructor
 @Controller
 public class ExpenseController {
+
     private final EventService eventService;
-    private final EventRepository eventRepository;
     private final UserService userService;
-    private final UserRepository userRepository;
     private final ExpenseService expenseService;
-    private final ExpenseRepository expenseRepository;
     private final PayoffService payoffService;
     private final ExpenseMapper expenseMapper;
 
@@ -55,7 +59,8 @@ public class ExpenseController {
     }
 
     @GetMapping("/events/{eventId}/newCustomExpense")
-    public String showCustomExpenseForm(@PathVariable Integer eventId,
+    public String showCustomExpenseForm(@AuthenticationPrincipal UserDetails userDetails,
+                                        @PathVariable Integer eventId,
                                         Model model) {
         Event event = eventService.findById(eventId);
         List<User> eventMembers = event.getEventMembers();
@@ -63,18 +68,19 @@ public class ExpenseController {
         model.addAttribute("event", event);
         model.addAttribute("eventMembers", eventMembers);
         model.addAttribute("newCustomExpense", new CustomExpenseDto());
-        model.addAttribute("loggedInUserName", userService.getCurrentlyLoggedInUser().getUsername());
+        model.addAttribute("loggedInUserName", userDetails.getUsername());
         return "new-custom-expense";
     }
 
     @PostMapping("/events/{eventId}/saveSplitExpense")
-    public String createSplitExpense(@ModelAttribute("newSplitExpense") SplitExpenseDto splitExpenseDto,
+    public String createSplitExpense(@AuthenticationPrincipal UserDetails userDetails,
+                                     @ModelAttribute("newSplitExpense") SplitExpenseDto splitExpenseDto,
                                      @PathVariable Integer eventId,
                                      BindingResult result,
                                      Model model) {
         Event foundEvent = eventService.findById(eventId);
         validateSplitExpense(eventId, splitExpenseDto, result);
-        saveAttributesToSplitModel(eventId, splitExpenseDto, model);
+        saveAttributesToSplitModel(userDetails, eventId, splitExpenseDto, model);
 
         if (result.hasErrors()) {
             return "new-split-expense";
@@ -86,36 +92,25 @@ public class ExpenseController {
     }
 
     @PostMapping("/events/{eventId}/saveCustomExpense")
-    public String createCustomExpense(@ModelAttribute("newCustomExpense") CustomExpenseDto customExpenseDto,
+    public String createCustomExpense(@AuthenticationPrincipal UserDetails userDetails,
+                                      @ModelAttribute("newCustomExpense") CustomExpenseDto customExpenseDto,
                                       @PathVariable Integer eventId,
                                       BindingResult result,
                                       Model model) {
         Event foundEvent = eventService.findById(eventId);
-        User loggedInUser = userService.getCurrentlyLoggedInUser();
-        List<User> eventMembers = foundEvent.getEventMembers();
-        validateCustomExpense(eventId, customExpenseDto, result);
-        saveAttributesToCustomModel(eventId, customExpenseDto, model);
+        User loggedInUser = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new UserNotFoundException("Currently logged in user not found."));
 
+        validateCustomExpense(eventId, customExpenseDto, result);
         if (result.hasErrors()) {
             return "new-custom-expense";
         }
 
-        List<String> namesOfMembers = eventMembers.stream()
-                .map(User::getUsername)
-                .collect(Collectors.toList());
-        customExpenseDto.setParticipantsNames(namesOfMembers);
-        Expense expense = expenseMapper.mapCustomExpenseDtoToDomain(foundEvent, customExpenseDto);
+        saveAttributesToCustomModel(userDetails, eventId, customExpenseDto, model);
 
-        List<Payoff> expensePayoffs = new ArrayList<>();
-        Payoff defaultPayoff = Payoff.builder()
-                .expensePaid(expense)
-                .userPaying(loggedInUser)
-                .payoffAmount(BigDecimal.ZERO)
-                .build();
-        expensePayoffs.add(defaultPayoff);
-        expense.setPayoffs(expensePayoffs);
-
+        Expense expense = createExpense(foundEvent, loggedInUser, customExpenseDto);
         expenseService.save(expense);
+
         return "redirect:/events/" + eventId + "/expenses";
     }
 
@@ -164,8 +159,9 @@ public class ExpenseController {
         return "redirect:/events/" + eventId + "/expenses";
     }
 
-    @GetMapping("/events/{eventId}/expenses/{expenseId}/delete")
-    public String deleteExpense(@PathVariable Integer eventId,
+    @DeleteMapping("/events/{eventId}/expenses/{expenseId}/delete")
+    public String deleteExpense(@AuthenticationPrincipal UserDetails userDetails,
+                                @PathVariable Integer eventId,
                                 @PathVariable Integer expenseId,
                                 Model model) {
         Event foundEvent = eventService.findById(eventId);
@@ -173,18 +169,47 @@ public class ExpenseController {
         Map<Integer, BigDecimal> costPerParticipant = foundExpense.getCostPerUser();
         Map<Integer, BigDecimal> payoffPerParticipant = foundExpense.getPayoffPerUser();
 
-        foundExpense.getParticipants().forEach(participant -> {
-            BigDecimal participantBalanceChange = costPerParticipant.getOrDefault(participant.getId(), BigDecimal.ZERO)
-                    .subtract(payoffPerParticipant.getOrDefault(participant.getId(), BigDecimal.ZERO));
-            participant.setBalance(participant.getBalance().add(participantBalanceChange));
-            participant.getExpenses().removeIf(expense -> expense.getId().equals(expenseId));
-            userService.save(participant);
-        });
+        updateParticipantsAndDeleteExpense(foundExpense, costPerParticipant, payoffPerParticipant);
 
         foundEvent.removeExpense(foundExpense);
         expenseService.deleteById(expenseId);
-        model.addAttribute("loggedInUserName", userService.getCurrentlyLoggedInUser().getUsername());
+        model.addAttribute("loggedInUserName", userDetails.getUsername());
         return "redirect:/events/" + eventId + "/expenses";
+    }
+
+    private Expense createExpense(Event foundEvent,
+                                  User loggedInUser,
+                                  CustomExpenseDto customExpenseDto) {
+        List<User> eventMembers = foundEvent.getEventMembers();
+        List<String> namesOfMembers = eventMembers.stream()
+                .map(User::getUsername)
+                .collect(Collectors.toList());
+        customExpenseDto.setParticipantsNames(namesOfMembers);
+
+        Expense expense = expenseMapper.mapCustomExpenseDtoToDomain(foundEvent, customExpenseDto);
+
+        List<Payoff> expensePayoffs = new ArrayList<>();
+        Payoff defaultPayoff = Payoff.builder()
+                .expensePaid(expense)
+                .userPaying(loggedInUser)
+                .payoffAmount(BigDecimal.ZERO)
+                .build();
+        expensePayoffs.add(defaultPayoff);
+        expense.setPayoffs(expensePayoffs);
+
+        return expense;
+    }
+
+    private void updateParticipantsAndDeleteExpense(Expense expense,
+                                                    Map<Integer, BigDecimal> costPerParticipant,
+                                                    Map<Integer, BigDecimal> payoffPerParticipant) {
+        expense.getParticipants().forEach(participant -> {
+            BigDecimal participantBalanceChange = costPerParticipant.getOrDefault(participant.getId(), BigDecimal.ZERO)
+                    .subtract(payoffPerParticipant.getOrDefault(participant.getId(), BigDecimal.ZERO));
+            participant.setBalance(participant.getBalance().add(participantBalanceChange));
+            participant.getExpenses().removeIf(exp -> exp.getId().equals(expense.getId()));
+            userService.save(participant);
+        });
     }
 
     private void validateSplitExpense(Integer eventId,
@@ -192,8 +217,7 @@ public class ExpenseController {
                                       BindingResult result) {
         Matcher matcher = costPattern.matcher(splitExpenseDto.getCost());
 
-        Optional<Expense> existingExpense =
-                Optional.ofNullable(expenseService.findByExpenseNameAndEventId(splitExpenseDto.getName(), eventId));
+        Optional<Expense> existingExpense = expenseService.findByExpenseNameAndEventId(splitExpenseDto.getName(), eventId);
         existingExpense.ifPresent(expense -> result.addError(new FieldError("newExpense", "name",
                 "Expense '" + expense.getName() + "' already exists.")));
 
@@ -216,7 +240,7 @@ public class ExpenseController {
                                        BindingResult result) {
         Matcher matcher = costPattern.matcher(customExpenseDto.getCost());
 
-        Optional<Expense> existingExpense = Optional.ofNullable(expenseService.findByExpenseNameAndEventId(customExpenseDto.getName(), eventId));
+        Optional<Expense> existingExpense = expenseService.findByExpenseNameAndEventId(customExpenseDto.getName(), eventId);
         existingExpense.ifPresent(expense -> result.addError(new FieldError("newExpense", "name",
                 "Expense '" + expense.getName() + "' already exists.")));
 
@@ -236,30 +260,30 @@ public class ExpenseController {
         }
     }
 
-    private void saveAttributesToSplitModel(Integer eventId,
+    private void saveAttributesToSplitModel(@AuthenticationPrincipal UserDetails userDetails,
+                                            Integer eventId,
                                             SplitExpenseDto splitExpenseDto,
                                             Model model) {
         Event foundEvent = eventService.findById(eventId);
-        User loggedInUser = userService.getCurrentlyLoggedInUser();
         List<User> eventMembers = foundEvent.getEventMembers();
         List<User> expenseParticipants = userService.getUsersByNames(splitExpenseDto);
 
         model.addAttribute("event", foundEvent);
-        model.addAttribute("loggedInUserName", loggedInUser.getUsername());
+        model.addAttribute("loggedInUserName", userDetails.getUsername());
         model.addAttribute("eventMembers", eventMembers);
         model.addAttribute("expenseParticipants", expenseParticipants);
     }
 
-    private void saveAttributesToCustomModel(Integer eventId,
+    private void saveAttributesToCustomModel(@AuthenticationPrincipal UserDetails userDetails,
+                                             Integer eventId,
                                              CustomExpenseDto customExpenseDto,
                                              Model model) {
         Event foundEvent = eventService.findById(eventId);
-        User loggedInUser = userService.getCurrentlyLoggedInUser();
         List<User> eventMembers = foundEvent.getEventMembers();
         List<User> expenseParticipants = userService.getUsersByNames(customExpenseDto);
 
         model.addAttribute("event", foundEvent);
-        model.addAttribute("loggedInUserName", loggedInUser.getUsername());
+        model.addAttribute("loggedInUserName", userDetails.getUsername());
         model.addAttribute("eventMembers", eventMembers);
         model.addAttribute("expenseParticipants", expenseParticipants);
     }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 @Data
 @Service
 public class RoleServiceImpl implements RoleService {
+
     private RoleRepository roleRepository;
 
     @Autowired

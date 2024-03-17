@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public interface ExpenseService {
@@ -18,5 +19,5 @@ public interface ExpenseService {
     Map<Integer, BigDecimal> mapUserToCost(Expense expense);
     Map<Integer, BigDecimal> mapUserToPayoffAmount(Expense expense);
     Map<Integer, BigDecimal> mapUserToBalance(Expense expense);
-    Expense findByExpenseNameAndEventId(String expenseName, Integer eventId);
+    Optional<Expense> findByExpenseNameAndEventId(String expenseName, Integer eventId);
 }

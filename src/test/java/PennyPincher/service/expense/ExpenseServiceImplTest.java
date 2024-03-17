@@ -161,10 +161,10 @@ public class ExpenseServiceImplTest {
         String expenseName = "Expense";
         Integer eventId = 1;
         Expense expectedExpense = new Expense();
-        when(expenseRepository.findByNameAndEventId(expenseName, eventId)).thenReturn(expectedExpense);
+        when(expenseRepository.findByNameAndEventId(expenseName, eventId)).thenReturn(Optional.of(expectedExpense));
 
         // when
-        Expense result = expenseService.findByExpenseNameAndEventId(expenseName, eventId);
+        Optional<Expense> result = expenseService.findByExpenseNameAndEventId(expenseName, eventId);
 
         // then
         assertEquals(expectedExpense, result);

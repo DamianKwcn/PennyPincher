@@ -27,16 +27,14 @@ public class EventMapperTest {
         // given
         EventDto eventDto = new EventDto();
         eventDto.setEventName("event");
-
         User owner = new User();
         owner.setId(1);
         owner.setUsername("test_user");
         owner.setFirstName("user1");
 
-        when(userService.getCurrentlyLoggedInUser()).thenReturn(owner);
-
         // when
-        Event event = eventMapper.mapToDomain(eventDto);
+        when(userService.findByUsername("test_user")).thenReturn(java.util.Optional.of(owner));
+        Event event = eventMapper.mapToDomain(eventDto, new org.springframework.security.core.userdetails.User("test_user", "", null));
 
         // then
         assertNotNull(event);

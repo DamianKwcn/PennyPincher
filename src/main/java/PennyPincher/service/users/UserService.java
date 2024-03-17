@@ -10,17 +10,18 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
 public interface UserService {
     void save(User user);
     User findById(Integer userId);
-    User findByUsername(String username);
+    Optional<User> findByUsername(String username);
     List<User> findAll();
-    User getCurrentlyLoggedInUser();
     List<User> getUsersByNames(SplitExpenseDto splitExpenseDto);
     List<User> getUsersByNames(CustomExpenseDto customExpenseDto);
     Map<Event, BigDecimal> balanceInEachEvent(User user, List<Event> events, Set<Expense> expenses);
+    BigDecimal totalBalanceForUser(User loggedInUser, Map<Event, BigDecimal> balanceInEachEvent);
 }
 
