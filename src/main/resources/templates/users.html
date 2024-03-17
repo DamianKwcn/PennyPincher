@@ -85,10 +85,10 @@
                                             <td th:text="${user.firstName}"></td>
                                             <td th:text="${user.username}"></td>
                                             <td>
-                                                <a th:if="${add_id!=null}"
-                                                   th:href="@{'/events/'+${add_id}+'/addUser?userId='+${user.id}}">
-                                                    Add User
-                                                </a>
+                                                <form th:action="@{'/events/'+${add_id}+'/addUser'}" method="post">
+                                                    <input type="hidden" name="userId" th:value="${user.id}" />
+                                                    <button type="submit" class="btn btn-success">Add User</button>
+                                                </form>
                                             </td>
                                         </tr>
                                         </tbody>
@@ -126,17 +126,19 @@
                     <td th:text="${user.firstName}"></td>
                     <td th:text="${user.username}"></td>
                     <td>
-                        <a th:if="${remove_id!=null}"
-                           th:href="@{'/events/'+${remove_id}+'/removeUser?userId='+${user.id}}"
-                           onclick="return confirm('Are you sure you want to remove user from this event?');">
-                            Remove from Event
-                        </a>
-                        <br>
-                        <a th:if="${event.owner.id != user.id}"
-                           th:href="@{'/events/'+${event.id}+'/setAsEventOwner/'+${user.id}}"
-                           onclick="return confirm('Are you sure you want to change owner?');">
-                            Set As Event Owner
-                        </a>
+                        <form th:action="@{'/events/'+${remove_id}+'/removeUser'}" method="POST">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <input type="hidden" name="userId" th:value="${user.id}">
+                            <button type="submit" class="btn btn-danger"
+                                    onclick="return confirm('Are you sure you want to remove user from this event?');">Remove from Event</button>
+                        </form>
+                        <form th:action="@{'/events/'+${event.id}+'/setAsEventOwner/'+${user.id}}"
+                              method="POST" th:if="${event.owner.id != user.id}">
+                            <button type="submit"
+                                    class="btn btn-info"
+                                    onclick="return confirm('Are you sure you want to change owner?');">Set As Event Owner</button>
+                        </form>
+                    </td>
                     </td>
                 </tr>
                 </tbody>

@@ -1,13 +1,16 @@
 package PennyPincher.controller;
 
-import PennyPincher.entity.Event;
-import PennyPincher.entity.Expense;
-import PennyPincher.service.users.UserService;
 import PennyPincher.dto.user.UserDto;
 import PennyPincher.dto.user.UserMapper;
+import PennyPincher.entity.Event;
+import PennyPincher.entity.Expense;
 import PennyPincher.entity.User;
+import PennyPincher.exception.UserNotFoundException;
+import PennyPincher.service.users.UserService;
 import jakarta.validation.Valid;
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -16,14 +19,12 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-@Data
+@RequiredArgsConstructor
 @Controller
 public class UserController {
+
     private final UserService userService;
     private final UserMapper userMapper;
 
@@ -52,8 +53,30 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public String userProfile(Model model) {
-        User loggedInUser = userService.getCurrentlyLoggedInUser();
+    public String userProfile(@AuthenticationPrincipal UserDetails userDetails,
+                              Model model) {
+        String username = userDetails.getUsername();
+        Optional<User> optionalUser = userService.findByUsername(username);
+
+        if (optionalUser.isPresent()) {
+            User loggedInUser = optionalUser.get();
+            saveAttributesToUserModel(loggedInUser, model);
+            return "profile";
+        } else {
+            throw new UserNotFoundException("Currently logged in user not found.");
+        }
+    }
+
+    private boolean doesUserAlreadyExist(String userName) {
+        if (userName == null || userName.isBlank()) {
+            return false;
+        }
+        Optional<User> optionalUser = userService.findByUsername(userName);
+        return optionalUser.isPresent();
+    }
+
+    private void saveAttributesToUserModel(User loggedInUser,
+                                           Model model) {
         List<Event> userEvents = loggedInUser.getUserEvents();
         Set<Expense> expenses = loggedInUser.getExpenses();
 
@@ -61,16 +84,11 @@ public class UserController {
         userEvents.sort(Comparator.comparing(Event::getEventBalance));
 
         Map<Event, BigDecimal> balanceInEachEvent = userService.balanceInEachEvent(loggedInUser, userEvents, expenses);
+        BigDecimal totalBalanceForUser = userService.totalBalanceForUser(loggedInUser, balanceInEachEvent);
 
         model.addAttribute("userEvents", userEvents);
         model.addAttribute("balanceInEachEvent", balanceInEachEvent);
         model.addAttribute("loggedInUserName", loggedInUser.getUsername());
-        model.addAttribute("userBalance", loggedInUser.getBalance());
-        return "profile";
-    }
-
-    private boolean doesUserAlreadyExist(String userName) {
-        User foundUser = userService.findByUsername(userName);
-        return foundUser != null && !foundUser.getUsername().isBlank();
+        model.addAttribute("userBalance", totalBalanceForUser);
     }
 }

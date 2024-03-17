@@ -14,6 +14,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -66,8 +67,8 @@ public class UserServiceImplTest {
         user2.setUsername("Benjamin");
         List<User> userList = Arrays.asList(user1, user2);
 
-        when(userRepository.findByUsername("Amadeus")).thenReturn(user1);
-        when(userRepository.findByUsername("Benjamin")).thenReturn(user2);
+        when(userRepository.findByUsername("Amadeus")).thenReturn(Optional.of(user1));
+        when(userRepository.findByUsername("Benjamin")).thenReturn(Optional.of(user2));
 
         // when
         List<User> result = userService.getUsersByNames(customExpenseDto);
@@ -89,8 +90,8 @@ public class UserServiceImplTest {
         user2.setUsername("Benjamin");
         List<User> userList = Arrays.asList(user1, user2);
 
-        when(userRepository.findByUsername("Amadeus")).thenReturn(user1);
-        when(userRepository.findByUsername("Benjamin")).thenReturn(user2);
+        when(userRepository.findByUsername("Amadeus")).thenReturn(Optional.of(user1));
+        when(userRepository.findByUsername("Benjamin")).thenReturn(Optional.of(user2));
 
         // when
         List<User> result = userService.getUsersByNames(splitExpenseDto);

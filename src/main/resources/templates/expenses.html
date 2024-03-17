@@ -130,11 +130,13 @@
                             </p>
                         </td>
                         <td>
-                            <a th:href="@{/events/{eventId}/expenses/{expenseId}/delete(eventId=${eventId}, expenseId=${expense.id})}"
-                               class="btn btn-danger btn-sm"
-                               onclick="if (!(confirm('Are you sure?'))) return false">
-                                Delete
-                            </a>
+                            <form th:action="@{/events/{eventId}/expenses/{expenseId}/delete(eventId=${eventId}, expenseId=${expense.id})}"
+                                  method="post" th:method="delete">
+                                <input type="hidden" name="_method" value="DELETE"/>
+                                <input type="hidden" name="eventId" th:value="${eventId}"/>
+                                <input type="hidden" name="expenseId" th:value="${expense.id}"/>
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
+                            </form>
                         </td>
                     </tr>
                     </tbody>
@@ -164,14 +166,14 @@
                                                     <td th:text="${singleParticipant.firstName}"></td>
                                                     <td th:text="${singleParticipant.username}"></td>
                                                     <td>
-                                                        <form th:action="@{'/events/' + ${eventId} + '/expenses/' + ${expense.id} + '/users/' + ${singleParticipant.id}}">
+                                                        <form th:action="@{'/events/' + ${eventId} + '/expenses/' + ${expense.id} + '/users/' + ${singleParticipant.id}}" method="post" th:method="post">
                                                             <label for="paidOffAmount">
                                                                 Enter how much you've already paid off
                                                             </label>
                                                             <input type="text" id="paidOffAmount"
                                                                    th:name="paidOffAmount"
-                                                            pattern="[0-9]+(\.[0-9]+)?"
-                                                            title="Enter proper value for paidoff amount."/>
+                                                                   pattern="[0-9]+(\.[0-9]+)?"
+                                                                   title="Enter proper value for paidoff amount."/>
                                                             <button type="submit">Add</button>
                                                         </form>
                                                     </td>
