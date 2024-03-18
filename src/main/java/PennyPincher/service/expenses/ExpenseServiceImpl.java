@@ -1,10 +1,14 @@
 package PennyPincher.service.expenses;
 
+import PennyPincher.dto.expense.CustomExpenseDto;
+import PennyPincher.dto.expense.ExpenseMapper;
+import PennyPincher.entity.Event;
 import PennyPincher.entity.Expense;
 import PennyPincher.entity.Payoff;
 import PennyPincher.entity.User;
 import PennyPincher.exception.ExpenseNotFoundException;
 import PennyPincher.repository.ExpenseRepository;
+import PennyPincher.service.users.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +21,8 @@ import java.util.stream.Collectors;
 @Service
 public class ExpenseServiceImpl implements ExpenseService {
 
-    private ExpenseRepository expenseRepository;
+    private final ExpenseRepository expenseRepository;
+    private final UserService userService;
 
     @Override
     public Expense findById(Integer expenseId) {
@@ -45,12 +50,11 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     public List<Expense> findExpensesForGivenEvent(Integer eventId) {
-        Optional<List<Expense>> expensesOptional = expenseRepository.findByEventId(eventId);
-        return expensesOptional.orElse(Collections.emptyList());
+        return expenseRepository.findByEventId(eventId);
     }
 
     @Override
-    public Optional<Expense> findByExpenseNameAndEventId(String expenseName, Integer eventId) {
+    public Expense findByExpenseNameAndEventId(String expenseName, Integer eventId) {
         return expenseRepository.findByNameAndEventId(expenseName, eventId);
     }
 
@@ -86,6 +90,64 @@ public class ExpenseServiceImpl implements ExpenseService {
                         User::getId,
                         participant -> calculateParticipantBalance(expense, participant)
                 ));
+    }
+
+    @Override
+    public void updateExpenseAttributes(List<Expense> eventExpenses) {
+        for (Expense expense : eventExpenses) {
+            Map<Integer, BigDecimal> payoffAmountPerParticipant = mapUserToPayoffAmount(expense);
+            Map<Integer, BigDecimal> balancePerParticipant = mapUserToBalance(expense);
+            Map<Integer, BigDecimal> costPerParticipant = mapUserToCost(expense);
+            expense.setCostPerUser(costPerParticipant);
+            expense.setPayoffPerUser(payoffAmountPerParticipant);
+            expense.setBalancePerUser(balancePerParticipant);
+            save(expense);
+        }
+    }
+
+    @Override
+    public BigDecimal calculateUpdatedBalanceForEvent(List<Expense> eventExpenses) {
+        return eventExpenses.stream()
+                .flatMap(expense -> expense.getBalancePerUser().values().stream())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Override
+    public Expense createExpense(Event foundEvent,
+                                 User loggedInUser,
+                                 CustomExpenseDto customExpenseDto,
+                                 ExpenseMapper expenseMapper) {
+        List<User> eventMembers = foundEvent.getEventMembers();
+        List<String> namesOfMembers = eventMembers.stream()
+                .map(User::getUsername)
+                .collect(Collectors.toList());
+        customExpenseDto.setParticipantsNames(namesOfMembers);
+
+        Expense expense = expenseMapper.mapCustomExpenseDtoToDomain(foundEvent, customExpenseDto);
+
+        List<Payoff> expensePayoffs = new ArrayList<>();
+        Payoff defaultPayoff = Payoff.builder()
+                .expensePaid(expense)
+                .userPaying(loggedInUser)
+                .payoffAmount(BigDecimal.ZERO)
+                .build();
+        expensePayoffs.add(defaultPayoff);
+        expense.setPayoffs(expensePayoffs);
+
+        return expense;
+    }
+
+    @Override
+    public void updateParticipantsAndDeleteExpense(Expense expense,
+                                                   Map<Integer, BigDecimal> costPerParticipant,
+                                                   Map<Integer, BigDecimal> payoffPerParticipant) {
+        expense.getParticipants().forEach(participant -> {
+            BigDecimal participantBalanceChange = costPerParticipant.getOrDefault(participant.getId(), BigDecimal.ZERO)
+                    .subtract(payoffPerParticipant.getOrDefault(participant.getId(), BigDecimal.ZERO));
+            participant.setBalance(participant.getBalance().add(participantBalanceChange));
+            participant.getExpenses().removeIf(exp -> exp.getId().equals(expense.getId()));
+            userService.save(participant);
+        });
     }
 
     private BigDecimal sumParticipantPayoffs(Expense expense, User participant) {

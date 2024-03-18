@@ -7,6 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
-    Optional<Expense> findByNameAndEventId(String expenseName, Integer eventId);
-    Optional<List<Expense>> findByEventId(Integer eventId);
+    Expense findByNameAndEventId(String expenseName, Integer eventId);
+    List<Expense> findByEventId(Integer eventId);
 }

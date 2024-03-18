@@ -23,7 +23,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -87,9 +86,9 @@ public class EventController {
         return "redirect:/events";
     }
 
-    @DeleteMapping("/deleteEvent")
+    @DeleteMapping("/deleteEvent/{eventId}")
     public String deleteEvent(@AuthenticationPrincipal UserDetails userDetails,
-                              @RequestParam("eventId") Integer eventId,
+                              @PathVariable Integer eventId,
                               RedirectAttributes redirectAttributes) {
         userService.findByUsername(userDetails.getUsername()).ifPresent(user -> {
             Event event = eventService.findById(eventId);
@@ -115,7 +114,7 @@ public class EventController {
         List<User> remainingUsers = new ArrayList<>();
         List<Expense> eventExpenses = expenseService.findExpensesForGivenEvent(eventId);
 
-        populateUserLists(allUsers, eventMembers, remainingUsers);
+        eventService.populateUserLists(allUsers, eventMembers, remainingUsers);
 
         model.addAttribute("event", event);
         saveCommonAttributes(model, eventId, eventMembers, remainingUsers, eventExpenses, loggedInUser);
@@ -134,9 +133,9 @@ public class EventController {
         List<User> remainingUsers = new ArrayList<>();
         List<Expense> eventExpenses = expenseService.findExpensesForGivenEvent(eventId);
 
-        updateExpenseAttributes(eventExpenses);
-        populateUserLists(allUsers, eventMembers, remainingUsers);
-        BigDecimal updatedBalance = calculateUpdatedBalanceForEvent(eventExpenses);
+        expenseService.updateExpenseAttributes(eventExpenses);
+        eventService.populateUserLists(allUsers, eventMembers, remainingUsers);
+        BigDecimal updatedBalance = expenseService.calculateUpdatedBalanceForEvent(eventExpenses);
         event.setEventBalance(updatedBalance);
         eventService.save(event);
 
@@ -206,34 +205,9 @@ public class EventController {
         }
     }
 
-    private BigDecimal calculateUpdatedBalanceForEvent(List<Expense> eventExpenses) {
-        return eventExpenses.stream()
-                .flatMap(expense -> expense.getBalancePerUser().values().stream())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-    private void populateUserLists(List<User> allUsers, List<User> eventMembers, List<User> remainingUsers) {
-        for (User u : allUsers) {
-            if (!eventMembers.contains(u)) {
-                remainingUsers.add(u);
-            }
-        }
-    }
-
     private User getLoggedInUser(UserDetails userDetails) {
         return userService.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new UserNotFoundException("User not found with username: " + userDetails.getUsername()));
-    }
-
-    private void updateExpenseAttributes(List<Expense> eventExpenses) {
-        for (Expense expense : eventExpenses) {
-            Map<Integer, BigDecimal> payoffAmountPerParticipant = expenseService.mapUserToPayoffAmount(expense);
-            Map<Integer, BigDecimal> balancePerParticipant = expenseService.mapUserToBalance(expense);
-            Map<Integer, BigDecimal> costPerParticipant = expenseService.mapUserToCost(expense);
-            expense.setCostPerUser(costPerParticipant);
-            expense.setPayoffPerUser(payoffAmountPerParticipant);
-            expense.setBalancePerUser(balancePerParticipant);
-            expenseService.save(expense);
-        }
     }
 
     private void saveCommonAttributes(Model model,
