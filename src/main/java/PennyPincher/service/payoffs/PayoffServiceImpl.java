@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class PayoffServiceImpl implements PayoffService {
 
-    private PayoffRepository payoffRepository;
+    private final PayoffRepository payoffRepository;
 
     @Override
     public void save(Payoff payoff) {

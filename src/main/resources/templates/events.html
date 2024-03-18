@@ -124,10 +124,8 @@
                     </a>
                 </th:block>
                 <th:block th:if="${event.owner.username eq loggedInUserName}">
-                    <form th:action="@{/deleteEvent}" method="post" style="display: inline-block;">
-                        <input type="hidden" name="_method" value="DELETE" />
-                        <input type="hidden" name="eventId" th:value="${event.id}" />
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
+                    <form th:action="@{'/deleteEvent/' + ${event.id}}" method="post" th:method="delete" onsubmit="return confirm('Are you sure?')" style="display: inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                     </form>
                 </th:block>
             </td>

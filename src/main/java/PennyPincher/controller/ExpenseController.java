@@ -8,9 +8,6 @@ import PennyPincher.entity.Expense;
 import PennyPincher.entity.Payoff;
 import PennyPincher.entity.User;
 import PennyPincher.exception.UserNotFoundException;
-import PennyPincher.repository.EventRepository;
-import PennyPincher.repository.ExpenseRepository;
-import PennyPincher.repository.UserRepository;
 import PennyPincher.service.events.EventService;
 import PennyPincher.service.expenses.ExpenseService;
 import PennyPincher.service.payoffs.PayoffService;
@@ -26,13 +23,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Controller
@@ -108,7 +102,7 @@ public class ExpenseController {
 
         saveAttributesToCustomModel(userDetails, eventId, customExpenseDto, model);
 
-        Expense expense = createExpense(foundEvent, loggedInUser, customExpenseDto);
+        Expense expense = expenseService.createExpense(foundEvent, loggedInUser, customExpenseDto, expenseMapper);
         expenseService.save(expense);
 
         return "redirect:/events/" + eventId + "/expenses";
@@ -169,7 +163,7 @@ public class ExpenseController {
         Map<Integer, BigDecimal> costPerParticipant = foundExpense.getCostPerUser();
         Map<Integer, BigDecimal> payoffPerParticipant = foundExpense.getPayoffPerUser();
 
-        updateParticipantsAndDeleteExpense(foundExpense, costPerParticipant, payoffPerParticipant);
+        expenseService.updateParticipantsAndDeleteExpense(foundExpense, costPerParticipant, payoffPerParticipant);
 
         foundEvent.removeExpense(foundExpense);
         expenseService.deleteById(expenseId);
@@ -177,49 +171,16 @@ public class ExpenseController {
         return "redirect:/events/" + eventId + "/expenses";
     }
 
-    private Expense createExpense(Event foundEvent,
-                                  User loggedInUser,
-                                  CustomExpenseDto customExpenseDto) {
-        List<User> eventMembers = foundEvent.getEventMembers();
-        List<String> namesOfMembers = eventMembers.stream()
-                .map(User::getUsername)
-                .collect(Collectors.toList());
-        customExpenseDto.setParticipantsNames(namesOfMembers);
-
-        Expense expense = expenseMapper.mapCustomExpenseDtoToDomain(foundEvent, customExpenseDto);
-
-        List<Payoff> expensePayoffs = new ArrayList<>();
-        Payoff defaultPayoff = Payoff.builder()
-                .expensePaid(expense)
-                .userPaying(loggedInUser)
-                .payoffAmount(BigDecimal.ZERO)
-                .build();
-        expensePayoffs.add(defaultPayoff);
-        expense.setPayoffs(expensePayoffs);
-
-        return expense;
-    }
-
-    private void updateParticipantsAndDeleteExpense(Expense expense,
-                                                    Map<Integer, BigDecimal> costPerParticipant,
-                                                    Map<Integer, BigDecimal> payoffPerParticipant) {
-        expense.getParticipants().forEach(participant -> {
-            BigDecimal participantBalanceChange = costPerParticipant.getOrDefault(participant.getId(), BigDecimal.ZERO)
-                    .subtract(payoffPerParticipant.getOrDefault(participant.getId(), BigDecimal.ZERO));
-            participant.setBalance(participant.getBalance().add(participantBalanceChange));
-            participant.getExpenses().removeIf(exp -> exp.getId().equals(expense.getId()));
-            userService.save(participant);
-        });
-    }
-
     private void validateSplitExpense(Integer eventId,
                                       SplitExpenseDto splitExpenseDto,
                                       BindingResult result) {
         Matcher matcher = costPattern.matcher(splitExpenseDto.getCost());
 
-        Optional<Expense> existingExpense = expenseService.findByExpenseNameAndEventId(splitExpenseDto.getName(), eventId);
-        existingExpense.ifPresent(expense -> result.addError(new FieldError("newExpense", "name",
-                "Expense '" + expense.getName() + "' already exists.")));
+        Expense existingExpense = expenseService.findByExpenseNameAndEventId(splitExpenseDto.getName(), eventId);
+        if (existingExpense != null) {
+            result.addError(new FieldError("newExpense", "name",
+                    "Expense '" + existingExpense.getName() + "' already exists."));
+        }
 
         if (splitExpenseDto.getName().isBlank()) {
             result.addError(new FieldError("newExpense", "name",
@@ -240,9 +201,11 @@ public class ExpenseController {
                                        BindingResult result) {
         Matcher matcher = costPattern.matcher(customExpenseDto.getCost());
 
-        Optional<Expense> existingExpense = expenseService.findByExpenseNameAndEventId(customExpenseDto.getName(), eventId);
-        existingExpense.ifPresent(expense -> result.addError(new FieldError("newExpense", "name",
-                "Expense '" + expense.getName() + "' already exists.")));
+        Expense existingExpense = expenseService.findByExpenseNameAndEventId(customExpenseDto.getName(), eventId);
+        if (existingExpense != null) {
+            result.addError(new FieldError("newExpense", "name",
+                    "Expense '" + existingExpense.getName() + "' already exists."));
+        }
 
         if (customExpenseDto.getName().isBlank()) {
             result.addError(new FieldError("newExpense", "name",
