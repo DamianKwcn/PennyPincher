@@ -82,8 +82,6 @@ public class ExpenseController {
 
         Expense expense = expenseMapper.mapSplitExpenseToDomain(foundEvent, splitExpenseDto);
         expenseService.save(expense);
-
-        System.out.println(expense.toString());
         return "redirect:/events/" + eventId + "/expenses";
     }
 
@@ -105,7 +103,6 @@ public class ExpenseController {
 
         Expense expense = expenseService.createExpense(foundEvent, loggedInUser, customExpenseDto, expenseMapper);
         expenseService.save(expense);
-
         return "redirect:/events/" + eventId + "/expenses";
     }
 
@@ -136,7 +133,6 @@ public class ExpenseController {
         }
         foundExpense.getPayoffs().add(payoff);
         foundUser.getPayoffs().add(payoff);
-        foundUser.setBalance(userBalance);
 
         if (userBalance.compareTo(BigDecimal.ZERO) > 0) {
             errorMessage = "Too big amount of paid off";
@@ -144,6 +140,8 @@ public class ExpenseController {
         if (errorMessage != null) {
             return "redirect:/events/" + eventId + "/expenses?errorMessage=" + errorMessage;
         }
+
+        foundUser.setBalance(userBalance);
 
         userService.save(foundUser);
         expenseService.save(foundExpense);
