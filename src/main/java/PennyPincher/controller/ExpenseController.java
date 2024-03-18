@@ -82,6 +82,8 @@ public class ExpenseController {
 
         Expense expense = expenseMapper.mapSplitExpenseToDomain(foundEvent, splitExpenseDto);
         expenseService.save(expense);
+
+        System.out.println(expense.toString());
         return "redirect:/events/" + eventId + "/expenses";
     }
 
@@ -95,12 +97,11 @@ public class ExpenseController {
         User loggedInUser = userService.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new UserNotFoundException("Currently logged in user not found."));
 
+        saveAttributesToCustomModel(userDetails, eventId, customExpenseDto, model);
         validateCustomExpense(eventId, customExpenseDto, result);
         if (result.hasErrors()) {
             return "new-custom-expense";
         }
-
-        saveAttributesToCustomModel(userDetails, eventId, customExpenseDto, model);
 
         Expense expense = expenseService.createExpense(foundEvent, loggedInUser, customExpenseDto, expenseMapper);
         expenseService.save(expense);
@@ -108,7 +109,7 @@ public class ExpenseController {
         return "redirect:/events/" + eventId + "/expenses";
     }
 
-    @GetMapping("/events/{eventId}/expenses/{expenseId}/users/{userId}")
+    @PostMapping("/events/{eventId}/expenses/{expenseId}/users/{userId}")
     public String assignPaidOffAmount(@PathVariable("eventId") Integer eventId,
                                       @PathVariable("expenseId") Integer expenseId,
                                       @PathVariable("userId") Integer userId,
