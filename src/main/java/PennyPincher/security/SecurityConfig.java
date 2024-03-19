@@ -1,7 +1,6 @@
 package PennyPincher.security;
 
 import lombok.Data;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -20,47 +19,41 @@ import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 @Data
 public class SecurityConfig {
 
-        @Autowired
-        private final UserDetailsService userDetailsService;
+    private final UserDetailsService userDetailsService;
 
-        public SecurityConfig(UserDetailsService userDetailsService) {
-            this.userDetailsService = userDetailsService;
-        }
+    @Bean
+    public static PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+    }
 
-        @Bean
-        public static PasswordEncoder passwordEncoder(){
-            return new BCryptPasswordEncoder();
-        }
-
-        @Bean
-        public SecurityFilterChain filterChain(HttpSecurity http,  HandlerMappingIntrospector introspector) throws Exception {
-            http
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http,  HandlerMappingIntrospector introspector) throws Exception {
+        http
                 .authorizeHttpRequests((authorize) ->
                         authorize
                                 .requestMatchers(new MvcRequestMatcher(introspector, "/h2-console/**")).permitAll()
+                                .requestMatchers(new MvcRequestMatcher(introspector, "/")).permitAll()
                                 .requestMatchers(new MvcRequestMatcher(introspector, "/register/**")).permitAll()
                                 .requestMatchers(new MvcRequestMatcher(introspector,"/login")).permitAll()
                                 .anyRequest().authenticated()
                 ).formLogin(
                         form -> form
                                 .loginPage("/login")
-                                .loginProcessingUrl("/login")
                                 .defaultSuccessUrl("/profile")
                                 .permitAll()
                 ).logout(
                         logout -> logout
                                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                                 .permitAll()
-                        ).csrf().disable().headers().frameOptions().disable();
-            return http.build();
-        }
+                ).csrf().disable().headers().frameOptions().disable();
+        return http.build();
+    }
 
-        @Autowired
-        public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-            auth
-                    .userDetailsService(userDetailsService)
-                    .passwordEncoder(passwordEncoder());
-        }
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth
+                .userDetailsService(userDetailsService)
+                .passwordEncoder(passwordEncoder());
+    }
 }
 
 

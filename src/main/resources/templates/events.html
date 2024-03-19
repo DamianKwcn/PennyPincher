@@ -103,13 +103,6 @@
             </td>
             <td th:text="${event.eventName}"></td>
             <td>
-                <th:block th:if="${event.owner.username eq loggedInUserName}">
-                    <a th:href="@{/delete(eventId=${event.id})}"
-                       class="btn btn-danger btn-sm"
-                       onclick="if (!(confirm('Are you sure ?'))) return false">
-                        Delete
-                    </a>
-                </th:block>
                 <a th:href="@{/events/{id}/expenses(id=${event.id})}"
                    class="btn btn-sm btn-success">
                     Expenses
@@ -129,6 +122,11 @@
                             </a>
                         </span>
                     </a>
+                </th:block>
+                <th:block th:if="${event.owner.username eq loggedInUserName}">
+                    <form th:action="@{'/deleteEvent/' + ${event.id}}" method="post" th:method="delete" onsubmit="return confirm('Are you sure?')" style="display: inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
                 </th:block>
             </td>
             <td th:text="${event.creationDate}"></td>

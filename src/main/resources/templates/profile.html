@@ -66,13 +66,13 @@
             <thead class="table-dark">
             <tr>
                 <th>Events I'm participating</th>
-                <th>Balance of each Event</th>
+                <th>My balance in each Event</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="event : ${userEvents}">
                 <td th:text="${event.eventName}"></td>
-                <td th:text="${event.eventBalance}"></td>
+                <td th:text="${balanceInEachEvent.get(event)}"></td>
             </tr>
             </tbody>
         </table>
@@ -115,7 +115,7 @@
                 y: {
                     title: {
                         display: true,
-                        text: 'My Debt'
+                        text: 'Total Balance'
                     },
                     reverse: true
                 }

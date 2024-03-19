@@ -35,7 +35,7 @@ public class Event {
     @Column(name = "eventBalance")
     private BigDecimal eventBalance;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     private User owner;
 

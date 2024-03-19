@@ -6,6 +6,7 @@ import PennyPincher.entity.Payoff;
 import PennyPincher.entity.User;
 import PennyPincher.repository.ExpenseRepository;
 import PennyPincher.service.expenses.ExpenseServiceImpl;
+import PennyPincher.service.users.UserServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -47,9 +48,8 @@ public class ExpenseServiceImplTest {
         expense2.setEvent(event);
         List<Expense> expenses = Arrays.asList(expense1, expense2);
 
-        when(expenseRepository.findAll()).thenReturn(expenses);
-
         // when
+        when(expenseRepository.findByEventId(eventId)).thenReturn(expenses);
         List<Expense> result = expenseService.findExpensesForGivenEvent(eventId);
 
         // then
@@ -161,13 +161,14 @@ public class ExpenseServiceImplTest {
         String expenseName = "Expense";
         Integer eventId = 1;
         Expense expectedExpense = new Expense();
-        when(expenseRepository.findByNameAndEventId(expenseName, eventId)).thenReturn(expectedExpense);
 
         // when
-        Expense result = expenseService.findByExpenseNameAndEventId(expenseName, eventId);
+        when(expenseRepository.findByNameAndEventId(expenseName, eventId)).thenReturn(expectedExpense);
+        Optional<Expense> result = Optional.ofNullable(expenseService.findByExpenseNameAndEventId(expenseName, eventId));
 
         // then
-        assertEquals(expectedExpense, result);
+        assertTrue(result.isPresent());
+        assertEquals(expectedExpense, result.get());
     }
 
     @Test
@@ -211,4 +212,33 @@ public class ExpenseServiceImplTest {
         // then
         assertEquals(BigDecimal.valueOf(50), result);
     }
+
+    @Test
+    public void Should_CalculateUpdatedBalance_ForGivenEvent() {
+        // given
+        Expense expense1 = new Expense();
+        Expense expense2 = new Expense();
+        expense1.setBalancePerUser(Map.of(
+                1, BigDecimal.valueOf(20),
+                2, BigDecimal.valueOf(30)
+        ));
+
+        expense2.setBalancePerUser(Map.of(
+                1, BigDecimal.valueOf(10),
+                2, BigDecimal.valueOf(15)
+        ));
+
+        List<Expense> eventExpenses = new ArrayList<>();
+        eventExpenses.add(expense1);
+        eventExpenses.add(expense2);
+
+        BigDecimal expectedTotalBalance = BigDecimal.valueOf(75);
+
+        // when
+        BigDecimal result = expenseService.calculateUpdatedBalanceForEvent(eventExpenses);
+
+        // then
+        assertEquals(expectedTotalBalance, result);
+    }
+
 }
