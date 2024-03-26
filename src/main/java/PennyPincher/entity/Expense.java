@@ -79,5 +79,5 @@ public class Expense {
 
     @OneToMany(mappedBy = "expensePaid", fetch = FetchType.LAZY,
             cascade = {CascadeType.REMOVE})
-    private List<Payoff> payoffs;
+    private List<Payoff> payoffs = new ArrayList<>();
 }

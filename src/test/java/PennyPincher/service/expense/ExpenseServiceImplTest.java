@@ -1,29 +1,34 @@
 package PennyPincher.service.expense;
 
+import PennyPincher.dto.expense.CustomExpenseDto;
+import PennyPincher.dto.expense.ExpenseMapper;
 import PennyPincher.entity.Event;
 import PennyPincher.entity.Expense;
 import PennyPincher.entity.Payoff;
 import PennyPincher.entity.User;
 import PennyPincher.repository.ExpenseRepository;
 import PennyPincher.service.expenses.ExpenseServiceImpl;
-import PennyPincher.service.users.UserServiceImpl;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@SpringBootTest
+@ExtendWith(SpringExtension.class)
 public class ExpenseServiceImplTest {
+
     @Mock
     private ExpenseRepository expenseRepository;
 
@@ -239,6 +244,66 @@ public class ExpenseServiceImplTest {
 
         // then
         assertEquals(expectedTotalBalance, result);
+    }
+
+    @Test
+    public void Should_CreateExpense(){
+        // given
+        Event foundEvent = new Event();
+        User loggedInUser = new User();
+        CustomExpenseDto customExpenseDto = new CustomExpenseDto();
+        customExpenseDto.setCost("100");
+        customExpenseDto.setName("Test Expense");
+
+        ExpenseMapper expenseMapper = mock(ExpenseMapper.class);
+
+        when(expenseMapper.mapCustomExpenseDtoToDomain(eq(foundEvent), eq(customExpenseDto))).thenReturn(
+                Expense.builder()
+                        .name(customExpenseDto.getName())
+                        .totalCost(new BigDecimal(customExpenseDto.getCost()))
+                        .payoffs(Collections.singletonList(Payoff.builder().userPaying(loggedInUser).build()))
+                        .build()
+        );
+
+        // when
+        Expense createdExpense = expenseService.createExpense(foundEvent, loggedInUser, customExpenseDto, expenseMapper);
+
+        // then
+        assertNotNull(createdExpense);
+        assertEquals("Test Expense", createdExpense.getName());
+        assertEquals(BigDecimal.valueOf(100), createdExpense.getTotalCost());
+        assertEquals(1, createdExpense.getPayoffs().size());
+        assertEquals(loggedInUser, createdExpense.getPayoffs().get(0).getUserPaying());
+    }
+
+    @Test
+    public void Should_CalculateParticipantBalance() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        // given
+        User participant = new User();
+        participant.setId(1);
+
+        Payoff payoff1 = new Payoff();
+        payoff1.setUserPaying(participant);
+        payoff1.setPayoffAmount(BigDecimal.valueOf(20));
+
+        Payoff payoff2 = new Payoff();
+        payoff2.setUserPaying(participant);
+        payoff2.setPayoffAmount(BigDecimal.valueOf(30));
+
+        Map<Integer, BigDecimal> costPerUser = new HashMap<>();
+        costPerUser.put(participant.getId(), BigDecimal.valueOf(50));
+
+        Expense expense = new Expense();
+        expense.setPayoffs(Arrays.asList(payoff1, payoff2));
+        expense.setCostPerUser(costPerUser);
+
+        // when
+        Method method = ExpenseServiceImpl.class.getDeclaredMethod("calculateParticipantBalance", Expense.class, User.class);
+        method.setAccessible(true);
+        BigDecimal result = (BigDecimal) method.invoke(expenseService, expense, participant);
+
+        // then
+        assertEquals(BigDecimal.ZERO, result);
     }
 
 }

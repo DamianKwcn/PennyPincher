@@ -1,8 +1,5 @@
 package PennyPincher.dto.event;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import PennyPincher.entity.Event;
 import PennyPincher.entity.User;
 import PennyPincher.service.users.UserService;
@@ -10,12 +7,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
 
-@ExtendWith(MockitoExtension.class)
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
+
+@SpringBootTest
+@ExtendWith(SpringExtension.class)
 public class EventMapperTest {
+
     @Mock
     private UserService userService;
 
@@ -34,7 +38,8 @@ public class EventMapperTest {
 
         // when
         when(userService.findByUsername("test_user")).thenReturn(java.util.Optional.of(owner));
-        Event event = eventMapper.mapToDomain(eventDto, new org.springframework.security.core.userdetails.User("test_user", "", null));
+        Event event = eventMapper.mapToDomain(eventDto,
+                new org.springframework.security.core.userdetails.User("test_user", "", null));
 
         // then
         assertNotNull(event);

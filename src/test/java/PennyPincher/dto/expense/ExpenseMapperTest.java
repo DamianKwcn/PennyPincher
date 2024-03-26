@@ -1,18 +1,16 @@
 package PennyPincher.dto.expense;
 
-import PennyPincher.dto.expense.CustomExpenseDto;
-import PennyPincher.dto.expense.ExpenseMapper;
-import PennyPincher.dto.expense.SplitExpenseDto;
 import PennyPincher.entity.Event;
 import PennyPincher.entity.Expense;
 import PennyPincher.entity.User;
 import PennyPincher.service.expenses.ExpenseService;
 import PennyPincher.service.users.UserService;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -20,7 +18,8 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@SpringBootTest
+@ExtendWith(SpringExtension.class)
 public class ExpenseMapperTest {
 
     @Mock
@@ -55,10 +54,9 @@ public class ExpenseMapperTest {
         BigDecimal cost = BigDecimal.valueOf(100);
         BigDecimal equalPerEachParticipant = BigDecimal.valueOf(100);
 
+        // when
         when(userService.getUsersByNames(splitExpenseDto)).thenReturn(expenseParticipants);
         when(expenseService.splitCostEquallyPerParticipants(cost, expenseParticipants.size())).thenReturn(equalPerEachParticipant);
-
-        // when
         Expense result = expenseMapper.mapSplitExpenseToDomain(event, splitExpenseDto);
 
         // then
@@ -108,9 +106,8 @@ public class ExpenseMapperTest {
 
         BigDecimal cost = BigDecimal.valueOf(100);
 
-        when(userService.getUsersByNames(customExpenseDto)).thenReturn(expenseParticipants);
-
         // when
+        when(userService.getUsersByNames(customExpenseDto)).thenReturn(expenseParticipants);
         Expense result = expenseMapper.mapCustomExpenseDtoToDomain(event, customExpenseDto);
 
         // then
