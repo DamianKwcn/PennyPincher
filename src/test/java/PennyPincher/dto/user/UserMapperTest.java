@@ -13,12 +13,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@ExtendWith(SpringExtension.class)
 public class UserMapperTest {
+
     @Mock
     private PasswordEncoder passwordEncoder;
 
@@ -40,10 +44,9 @@ public class UserMapperTest {
         role.setId(1);
         role.setRole("ROLE_USER");
 
+        // when
         when(roleRepository.findByRole("ROLE_USER")).thenReturn(role);
         when(passwordEncoder.encode(userDto.getPassword())).thenReturn("encodedPassword");
-
-        // when
         User user = userMapper.mapToDomain(userDto);
 
         // then

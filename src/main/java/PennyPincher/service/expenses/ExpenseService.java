@@ -28,4 +28,5 @@ public interface ExpenseService {
     BigDecimal calculateUpdatedBalanceForEvent(List<Expense> eventExpenses);
     Expense createExpense(Event foundEvent, User loggedInUser, CustomExpenseDto customExpenseDto, ExpenseMapper expenseMapper);
     void updateParticipantsAndDeleteExpense(Expense expense, Map<Integer, BigDecimal> costPerParticipant, Map<Integer, BigDecimal> payoffPerParticipant);
+    BigDecimal calculateUserBalance(User foundUser, BigDecimal paidOffFromInput);
 }

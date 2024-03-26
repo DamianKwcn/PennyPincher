@@ -82,8 +82,6 @@ public class ExpenseController {
 
         Expense expense = expenseMapper.mapSplitExpenseToDomain(foundEvent, splitExpenseDto);
         expenseService.save(expense);
-
-        System.out.println(expense.toString());
         return "redirect:/events/" + eventId + "/expenses";
     }
 
@@ -105,7 +103,6 @@ public class ExpenseController {
 
         Expense expense = expenseService.createExpense(foundEvent, loggedInUser, customExpenseDto, expenseMapper);
         expenseService.save(expense);
-
         return "redirect:/events/" + eventId + "/expenses";
     }
 
@@ -118,36 +115,16 @@ public class ExpenseController {
         Expense foundExpense = expenseService.findById(expenseId);
         User foundUser = userService.findById(userId);
 
-        String errorMessage = null;
+        BigDecimal paidOffFromInput = validatePaidOffAmount(paidOffAmount);
+        BigDecimal userBalance = expenseService.calculateUserBalance(foundUser, paidOffFromInput);
 
-        BigDecimal paidOffFromInput = paidOffAmount == null
-                ? BigDecimal.ZERO.setScale(2, RoundingMode.CEILING)
-                : new BigDecimal(paidOffAmount.replaceAll(",", ".")).setScale(2, RoundingMode.CEILING);
-        BigDecimal userBalance = foundUser.getBalance().add(paidOffFromInput);
+        Payoff payoff = payoffService.createPayoff(foundExpense, foundUser, paidOffFromInput);
 
-        Payoff payoff = Payoff.builder()
-                .expensePaid(foundExpense)
-                .userPaying(foundUser)
-                .payoffAmount(paidOffFromInput)
-                .build();
-
-        if (foundExpense.getTotalCost() != null) {
-            foundExpense.setExpenseBalance(foundExpense.getExpenseBalance().add(paidOffFromInput));
+        try {
+            updateExpenseAndUser(foundExpense, foundUser, payoff, userBalance);
+        } catch (IllegalArgumentException e) {
+            return "redirect:/events/" + eventId + "/expenses?errorMessage=" + e.getMessage();
         }
-        foundExpense.getPayoffs().add(payoff);
-        foundUser.getPayoffs().add(payoff);
-        foundUser.setBalance(userBalance);
-
-        if (userBalance.compareTo(BigDecimal.ZERO) > 0) {
-            errorMessage = "Too big amount of paid off";
-        }
-        if (errorMessage != null) {
-            return "redirect:/events/" + eventId + "/expenses?errorMessage=" + errorMessage;
-        }
-
-        userService.save(foundUser);
-        expenseService.save(foundExpense);
-        payoffService.save(payoff);
 
         model.addAttribute("paidOffAmount", paidOffAmount);
         model.addAttribute("userBalance", userBalance);
@@ -170,6 +147,24 @@ public class ExpenseController {
         expenseService.deleteById(expenseId);
         model.addAttribute("loggedInUserName", userDetails.getUsername());
         return "redirect:/events/" + eventId + "/expenses";
+    }
+
+    private void updateExpenseAndUser(Expense foundExpense, User foundUser, Payoff payoff, BigDecimal userBalance) {
+        if (userBalance.compareTo(BigDecimal.ZERO) > 0) {
+            throw new IllegalArgumentException("Too big amount of paid off");
+        }
+
+        foundUser.setBalance(userBalance);
+
+        userService.save(foundUser);
+        expenseService.save(foundExpense);
+        payoffService.save(payoff);
+    }
+
+    private BigDecimal validatePaidOffAmount(String paidOffAmount) {
+        return (paidOffAmount == null || paidOffAmount.isEmpty())
+                ? BigDecimal.ZERO.setScale(2, RoundingMode.CEILING)
+                : new BigDecimal(paidOffAmount.replaceAll(",", ".")).setScale(2, RoundingMode.CEILING);
     }
 
     private void validateSplitExpense(Integer eventId,
@@ -252,4 +247,3 @@ public class ExpenseController {
         model.addAttribute("expenseParticipants", expenseParticipants);
     }
 }
-
