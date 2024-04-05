@@ -20,11 +20,11 @@
 PennyPincher is a local web application designed for personal finance management and expense sharing among friends. It addresses the common challenge of splitting expenses during vacations, outings, and other social activities with friends, making it easy to track and settle shared expenses.
 
 ## Instruction
-1.Register first and then log in.
-2.Go to events site and create one.
-3.Add registered users to your event.
-4.Go to expenses to create and split costs between you and the others.
-5.You don't have to repay the entire debt at once. Use the 'paid off' button and specify the amount you want to pay back.
+- 1. Register first and then log in.
+- 2. Go to events site and create one.
+- 3. Add registered users to your event.
+- 4. Go to expenses to create and split costs between you and the others.
+- 5. You don't have to repay the entire debt at once. Use the 'paid off' button and specify the amount you want to pay back.
 
 ## Technologies Used
 
