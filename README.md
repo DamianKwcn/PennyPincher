@@ -31,12 +31,10 @@ PennyPincher is a local web application designed for personal finance management
 PennyPincher is built using the following technologies:
 
 - **Java 17**: The programming language used for backend development.
-- **Spring Boot 3.1.4**: Provides a robust framework for building web applications and RESTful services.
-- **Spring Data REST WebMVC**: Simplifies the creation of RESTful APIs for data access and manipulation.
+- **Spring Boot 3.1.4**: Provides a robust framework for building web application.
 - **Spring Security**: Ensures secure authentication and authorization within the application.
 - **Hibernate**: Provides object-relational mapping (ORM) for seamless interaction with Java objects, often used in conjunction with JPA.
-- **JDBC**: Enables direct interaction with the database through the execution of SQL queries.
-- **Thymeleaf**: A modern server-side Java template engine for web applications.
+- **Thymeleaf**: A modern server-side Java template engine.
 - **Lombok**: Simplifies Java code by providing annotations to reduce boilerplate code.
 - **MySQL**: A relational database used for storing data in the application.
 
