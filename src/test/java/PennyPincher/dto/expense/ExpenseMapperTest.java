@@ -1,8 +1,8 @@
 package PennyPincher.dto.expense;
 
-import PennyPincher.entity.Event;
-import PennyPincher.entity.Expense;
-import PennyPincher.entity.User;
+import PennyPincher.model.Event;
+import PennyPincher.model.Expense;
+import PennyPincher.model.User;
 import PennyPincher.service.expenses.ExpenseService;
 import PennyPincher.service.users.UserService;
 import org.junit.jupiter.api.Test;

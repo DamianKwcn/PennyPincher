@@ -1,8 +1,8 @@
 package PennyPincher.service.payoff;
 
-import PennyPincher.entity.Expense;
-import PennyPincher.entity.Payoff;
-import PennyPincher.entity.User;
+import PennyPincher.model.Expense;
+import PennyPincher.model.Payoff;
+import PennyPincher.model.User;
 import PennyPincher.repository.PayoffRepository;
 import PennyPincher.service.payoffs.PayoffServiceImpl;
 import org.junit.jupiter.api.Test;

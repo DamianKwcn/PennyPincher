@@ -1,7 +1,7 @@
 package PennyPincher.service.events;
 
-import PennyPincher.entity.Event;
-import PennyPincher.entity.User;
+import PennyPincher.model.Event;
+import PennyPincher.model.User;
 import jakarta.validation.constraints.NotEmpty;
 import org.springframework.stereotype.Service;
 

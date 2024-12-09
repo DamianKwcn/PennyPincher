@@ -1,7 +1,7 @@
 package PennyPincher.service.event;
 
-import PennyPincher.entity.Event;
-import PennyPincher.entity.User;
+import PennyPincher.model.Event;
+import PennyPincher.model.User;
 import PennyPincher.exception.EventNotFoundException;
 import PennyPincher.repository.EventRepository;
 import PennyPincher.service.events.EventServiceImpl;

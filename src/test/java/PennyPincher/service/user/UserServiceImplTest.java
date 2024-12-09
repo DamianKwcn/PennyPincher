@@ -2,9 +2,9 @@ package PennyPincher.service.user;
 
 import PennyPincher.dto.expense.CustomExpenseDto;
 import PennyPincher.dto.expense.SplitExpenseDto;
-import PennyPincher.entity.Event;
-import PennyPincher.entity.Expense;
-import PennyPincher.entity.User;
+import PennyPincher.model.Event;
+import PennyPincher.model.Expense;
+import PennyPincher.model.User;
 import PennyPincher.repository.UserRepository;
 import PennyPincher.service.users.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
