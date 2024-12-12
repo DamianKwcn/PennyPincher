@@ -2,10 +2,10 @@ package PennyPincher.service.users;
 
 import PennyPincher.dto.expense.CustomExpenseDto;
 import PennyPincher.dto.expense.SplitExpenseDto;
-import PennyPincher.entity.Event;
-import PennyPincher.entity.Expense;
-import PennyPincher.entity.User;
-import PennyPincher.entity.UsernameComparator;
+import PennyPincher.model.Event;
+import PennyPincher.model.Expense;
+import PennyPincher.model.User;
+import PennyPincher.model.UsernameComparator;
 import PennyPincher.exception.UserNotFoundException;
 import PennyPincher.repository.UserRepository;
 import lombok.AllArgsConstructor;

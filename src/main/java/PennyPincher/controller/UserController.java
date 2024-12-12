@@ -2,9 +2,9 @@ package PennyPincher.controller;
 
 import PennyPincher.dto.user.UserDto;
 import PennyPincher.dto.user.UserMapper;
-import PennyPincher.entity.Event;
-import PennyPincher.entity.Expense;
-import PennyPincher.entity.User;
+import PennyPincher.model.Event;
+import PennyPincher.model.Expense;
+import PennyPincher.model.User;
 import PennyPincher.exception.UserNotFoundException;
 import PennyPincher.service.users.UserService;
 import jakarta.validation.Valid;

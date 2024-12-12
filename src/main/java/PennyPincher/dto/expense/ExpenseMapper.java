@@ -1,8 +1,8 @@
 package PennyPincher.dto.expense;
 
-import PennyPincher.entity.Event;
-import PennyPincher.entity.Expense;
-import PennyPincher.entity.User;
+import PennyPincher.model.Event;
+import PennyPincher.model.Expense;
+import PennyPincher.model.User;
 import PennyPincher.service.expenses.ExpenseService;
 import PennyPincher.service.users.UserService;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,10 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component

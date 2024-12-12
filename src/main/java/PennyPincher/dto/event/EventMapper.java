@@ -1,7 +1,7 @@
 package PennyPincher.dto.event;
 
-import PennyPincher.entity.Event;
-import PennyPincher.entity.User;
+import PennyPincher.model.Event;
+import PennyPincher.model.User;
 import PennyPincher.exception.UserNotFoundException;
 import PennyPincher.service.users.UserService;
 import lombok.AllArgsConstructor;
