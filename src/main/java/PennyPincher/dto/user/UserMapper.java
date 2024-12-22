@@ -1,7 +1,7 @@
 package PennyPincher.dto.user;
 
-import PennyPincher.entity.Role;
-import PennyPincher.entity.User;
+import PennyPincher.model.Role;
+import PennyPincher.model.User;
 import PennyPincher.repository.RoleRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

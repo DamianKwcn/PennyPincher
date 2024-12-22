@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  pennypincherdb:
+    image: mysql:8.0
+    container_name: pennypincherdb
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: PennyPincher
+    volumes:
+      - ./src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - pennypincher-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 5s
+
+  pennypincherapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pennypincherapp
+    depends_on:
+      pennypincherdb:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://pennypincherdb:3306/PennyPincher
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+    networks:
+      - pennypincher-network
+
+networks:
+  pennypincher-network:
+    driver: bridge

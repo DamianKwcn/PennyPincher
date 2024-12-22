@@ -1,6 +1,6 @@
 package PennyPincher.repository;
 
-import PennyPincher.entity.User;
+import PennyPincher.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

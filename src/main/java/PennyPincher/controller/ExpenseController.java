@@ -3,10 +3,10 @@ package PennyPincher.controller;
 import PennyPincher.dto.expense.CustomExpenseDto;
 import PennyPincher.dto.expense.ExpenseMapper;
 import PennyPincher.dto.expense.SplitExpenseDto;
-import PennyPincher.entity.Event;
-import PennyPincher.entity.Expense;
-import PennyPincher.entity.Payoff;
-import PennyPincher.entity.User;
+import PennyPincher.model.Event;
+import PennyPincher.model.Expense;
+import PennyPincher.model.Payoff;
+import PennyPincher.model.User;
 import PennyPincher.exception.UserNotFoundException;
 import PennyPincher.service.events.EventService;
 import PennyPincher.service.expenses.ExpenseService;
@@ -106,7 +106,7 @@ public class ExpenseController {
         return "redirect:/events/" + eventId + "/expenses";
     }
 
-    @PostMapping("/events/{eventId}/expenses/{expenseId}/users/{userId}")
+   @PostMapping("/events/{eventId}/expenses/{expenseId}/users/{userId}")
     public String assignPaidOffAmount(@PathVariable("eventId") Integer eventId,
                                       @PathVariable("expenseId") Integer expenseId,
                                       @PathVariable("userId") Integer userId,
@@ -115,37 +115,16 @@ public class ExpenseController {
         Expense foundExpense = expenseService.findById(expenseId);
         User foundUser = userService.findById(userId);
 
-        String errorMessage = null;
+        BigDecimal paidOffFromInput = validatePaidOffAmount(paidOffAmount);
+        BigDecimal userBalance = expenseService.calculateUserBalance(foundUser, paidOffFromInput);
 
-        BigDecimal paidOffFromInput = (paidOffAmount == null || paidOffAmount.isEmpty())
-                ? BigDecimal.ZERO.setScale(2, RoundingMode.CEILING)
-                : new BigDecimal(paidOffAmount.replaceAll(",", ".")).setScale(2, RoundingMode.CEILING);
-        BigDecimal userBalance = foundUser.getBalance().add(paidOffFromInput);
+        Payoff payoff = payoffService.createPayoff(foundExpense, foundUser, paidOffFromInput);
 
-        Payoff payoff = Payoff.builder()
-                .expensePaid(foundExpense)
-                .userPaying(foundUser)
-                .payoffAmount(paidOffFromInput)
-                .build();
-
-        if (foundExpense.getTotalCost() != null) {
-            foundExpense.setExpenseBalance(foundExpense.getExpenseBalance().add(paidOffFromInput));
+        try {
+            updateExpenseAndUser(foundExpense, foundUser, payoff, userBalance);
+        } catch (IllegalArgumentException e) {
+            return "redirect:/events/" + eventId + "/expenses?errorMessage=" + e.getMessage();
         }
-        foundExpense.getPayoffs().add(payoff);
-        foundUser.getPayoffs().add(payoff);
-
-        if (userBalance.compareTo(BigDecimal.ZERO) > 0) {
-            errorMessage = "Too big amount of paid off";
-        }
-        if (errorMessage != null) {
-            return "redirect:/events/" + eventId + "/expenses?errorMessage=" + errorMessage;
-        }
-
-        foundUser.setBalance(userBalance);
-
-        userService.save(foundUser);
-        expenseService.save(foundExpense);
-        payoffService.save(payoff);
 
         model.addAttribute("paidOffAmount", paidOffAmount);
         model.addAttribute("userBalance", userBalance);
@@ -168,6 +147,24 @@ public class ExpenseController {
         expenseService.deleteById(expenseId);
         model.addAttribute("loggedInUserName", userDetails.getUsername());
         return "redirect:/events/" + eventId + "/expenses";
+    }
+
+    private void updateExpenseAndUser(Expense foundExpense, User foundUser, Payoff payoff, BigDecimal userBalance) {
+        if (userBalance.compareTo(BigDecimal.ZERO) > 0) {
+            throw new IllegalArgumentException("Too big amount of paid off");
+        }
+
+        foundUser.setBalance(userBalance);
+
+        userService.save(foundUser);
+        expenseService.save(foundExpense);
+        payoffService.save(payoff);
+    }
+
+    private BigDecimal validatePaidOffAmount(String paidOffAmount) {
+        return (paidOffAmount == null || paidOffAmount.isEmpty())
+                ? BigDecimal.ZERO.setScale(2, RoundingMode.CEILING)
+                : new BigDecimal(paidOffAmount.replaceAll(",", ".")).setScale(2, RoundingMode.CEILING);
     }
 
     private void validateSplitExpense(Integer eventId,
@@ -250,4 +247,3 @@ public class ExpenseController {
         model.addAttribute("expenseParticipants", expenseParticipants);
     }
 }
-

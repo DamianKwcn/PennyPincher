@@ -2,15 +2,14 @@ package PennyPincher.service.expenses;
 
 import PennyPincher.dto.expense.CustomExpenseDto;
 import PennyPincher.dto.expense.ExpenseMapper;
-import PennyPincher.entity.Event;
-import PennyPincher.entity.Expense;
-import PennyPincher.entity.User;
+import PennyPincher.model.Event;
+import PennyPincher.model.Expense;
+import PennyPincher.model.User;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public interface ExpenseService {
@@ -28,4 +27,5 @@ public interface ExpenseService {
     BigDecimal calculateUpdatedBalanceForEvent(List<Expense> eventExpenses);
     Expense createExpense(Event foundEvent, User loggedInUser, CustomExpenseDto customExpenseDto, ExpenseMapper expenseMapper);
     void updateParticipantsAndDeleteExpense(Expense expense, Map<Integer, BigDecimal> costPerParticipant, Map<Integer, BigDecimal> payoffPerParticipant);
+    BigDecimal calculateUserBalance(User foundUser, BigDecimal paidOffFromInput);
 }

@@ -3,22 +3,23 @@ package PennyPincher.dto.user;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import PennyPincher.dto.user.UserDto;
-import PennyPincher.dto.user.UserMapper;
-import PennyPincher.entity.Role;
-import PennyPincher.entity.User;
+import PennyPincher.model.Role;
+import PennyPincher.model.User;
 import PennyPincher.repository.RoleRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@ExtendWith(SpringExtension.class)
 public class UserMapperTest {
+
     @Mock
     private PasswordEncoder passwordEncoder;
 
@@ -40,10 +41,9 @@ public class UserMapperTest {
         role.setId(1);
         role.setRole("ROLE_USER");
 
+        // when
         when(roleRepository.findByRole("ROLE_USER")).thenReturn(role);
         when(passwordEncoder.encode(userDto.getPassword())).thenReturn("encodedPassword");
-
-        // when
         User user = userMapper.mapToDomain(userDto);
 
         // then

@@ -1,25 +1,28 @@
 package PennyPincher.service.event;
 
-import PennyPincher.entity.Event;
-import PennyPincher.entity.User;
+import PennyPincher.model.Event;
+import PennyPincher.model.User;
 import PennyPincher.exception.EventNotFoundException;
 import PennyPincher.repository.EventRepository;
 import PennyPincher.service.events.EventServiceImpl;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@SpringBootTest
+@ExtendWith(SpringExtension.class)
 public class EventServiceImplTest {
 
     @Mock
@@ -27,11 +30,13 @@ public class EventServiceImplTest {
 
     @InjectMocks
     private EventServiceImpl eventService;
-
     private Event event;
     private User user;
 
-    @Before
+    User user1 = User.builder().id(1).firstName("user1").username("user1").password("password").build();
+    User user2 = User.builder().id(2).firstName("user2").username("user2").password("password").build();
+
+    @BeforeEach
     public void setUp() {
         event = new Event();
         event.setId(1);
@@ -39,7 +44,6 @@ public class EventServiceImplTest {
         user = new User();
         user.setId(1);
     }
-
     @Test
     public void Should_FindById_ExistingEvent() {
         // given
@@ -52,13 +56,13 @@ public class EventServiceImplTest {
         assertEquals(event, result);
     }
 
-    @Test(expected = EventNotFoundException.class)
-    public void Should_FindById_NonExistingEvent() {
+    @Test
+    public void should_FindById_NonExistingEvent() {
         // given
-        when(eventRepository.findById(2)).thenReturn(Optional.empty());
+        when(eventRepository.findById(2)).thenThrow(new EventNotFoundException("Event not found with ID: 2"));
 
-        // then
-        eventService.findById(2);
+        // when
+        assertThrows(EventNotFoundException.class, () -> eventService.findById(2));
     }
 
     @Test
@@ -102,10 +106,6 @@ public class EventServiceImplTest {
         List<User> allUsers = new ArrayList<>();
         List<User> eventMembers = new ArrayList<>();
         List<User> remainingUsers = new ArrayList<>();
-        User user1 = new User();
-        User user2 = new User();
-        user1.setId(1);
-        user2.setId(2);
         eventMembers.add(user1);
         allUsers.add(user1);
         allUsers.add(user2);

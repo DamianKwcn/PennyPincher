@@ -1,8 +1,8 @@
 package PennyPincher.dto.user;
 
-import PennyPincher.entity.User;
+import PennyPincher.model.User;
 import PennyPincher.repository.UserRepository;
-import PennyPincher.entity.Role;
+import PennyPincher.model.Role;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

@@ -2,10 +2,10 @@ package PennyPincher.service.expenses;
 
 import PennyPincher.dto.expense.CustomExpenseDto;
 import PennyPincher.dto.expense.ExpenseMapper;
-import PennyPincher.entity.Event;
-import PennyPincher.entity.Expense;
-import PennyPincher.entity.Payoff;
-import PennyPincher.entity.User;
+import PennyPincher.model.Event;
+import PennyPincher.model.Expense;
+import PennyPincher.model.Payoff;
+import PennyPincher.model.User;
 import PennyPincher.exception.ExpenseNotFoundException;
 import PennyPincher.repository.ExpenseRepository;
 import PennyPincher.service.users.UserService;
@@ -14,7 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -174,5 +177,10 @@ public class ExpenseServiceImpl implements ExpenseService {
                 .filter(costMap -> participant.getId().equals(costMap.getKey()))
                 .map(Map.Entry::getValue)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Override
+    public BigDecimal calculateUserBalance(User foundUser, BigDecimal paidOffFromInput) {
+        return foundUser.getBalance().add(paidOffFromInput);
     }
 }
