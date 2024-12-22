@@ -6,12 +6,13 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
+@Builder
 @Getter
 @Setter
-@Builder
+@ToString
+@EqualsAndHashCode
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
 @Entity
 @Table(name = "payoff")
 public class Payoff {

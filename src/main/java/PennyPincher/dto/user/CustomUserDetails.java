@@ -3,6 +3,7 @@ package PennyPincher.dto.user;
 import PennyPincher.model.User;
 import PennyPincher.repository.UserRepository;
 import PennyPincher.model.Role;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,6 +22,7 @@ public class CustomUserDetails implements UserDetailsService {
 
     private final UserRepository userRepository;
 
+    @Transactional
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<User> optionalUser = userRepository.findByUsername(username);

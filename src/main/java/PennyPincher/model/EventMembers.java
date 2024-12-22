@@ -6,9 +6,10 @@ import lombok.*;
 
 @Getter
 @Setter
+@ToString
+@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 @Entity
 @Table(name = "event_members")
 public class EventMembers {
