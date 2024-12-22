@@ -63,6 +63,10 @@ public class UserServiceImplTest {
         // Given
         Event event1 = new Event();
         Event event2 = new Event();
+
+        event1.setEventName("Event 1");
+        event2.setEventName("Event 2");
+
         List<Event> events = Arrays.asList(event1, event2);
 
         Expense expense1 = mock(Expense.class);

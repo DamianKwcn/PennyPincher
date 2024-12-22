@@ -12,9 +12,10 @@ import java.util.List;
 @Builder
 @Getter
 @Setter
+@EqualsAndHashCode
+@ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
 @Entity
 @Table(name = "events")
 public class Event {
@@ -39,6 +40,7 @@ public class Event {
     @JoinColumn(name = "owner_id")
     private User owner;
 
+    @ToString.Exclude
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "event_members",

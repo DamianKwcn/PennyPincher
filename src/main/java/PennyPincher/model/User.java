@@ -13,9 +13,10 @@ import java.util.Set;
 @Builder
 @Getter
 @Setter
+@ToString
+@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 @Entity
 @Table(name = "users")
 public class User {
@@ -38,12 +39,13 @@ public class User {
     @Column(name = "balance")
     private BigDecimal balance;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private List<Role> roles = new ArrayList<>();
 
+    @ToString.Exclude
     @ManyToMany(mappedBy = "eventMembers",
             fetch = FetchType.LAZY)
     private List<Event> userEvents = new ArrayList<>();

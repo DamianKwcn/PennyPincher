@@ -1,2 +1,0 @@
-# PennyPincher
-CV Project

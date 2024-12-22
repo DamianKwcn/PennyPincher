@@ -2,13 +2,8 @@ version: '3.8'
 
 services:
   pennypincherdb:
-    image: mysql:8.0
+    image: daimyo0/pennypincherdb:1.0
     container_name: pennypincherdb
-    environment:
-      MYSQL_ROOT_PASSWORD: 1234
-      MYSQL_DATABASE: PennyPincher
-    volumes:
-      - ./src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     ports:
       - "3306:3306"
     networks:
@@ -21,9 +16,7 @@ services:
       timeout: 5s
 
   pennypincherapp:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: daimyo0/pennypincherapp:1.0
     container_name: pennypincherapp
     depends_on:
       pennypincherdb:
