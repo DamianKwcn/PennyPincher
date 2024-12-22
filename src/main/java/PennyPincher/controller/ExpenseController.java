@@ -106,7 +106,7 @@ public class ExpenseController {
         return "redirect:/events/" + eventId + "/expenses";
     }
 
-    @PostMapping("/events/{eventId}/expenses/{expenseId}/users/{userId}")
+   @PostMapping("/events/{eventId}/expenses/{expenseId}/users/{userId}")
     public String assignPaidOffAmount(@PathVariable("eventId") Integer eventId,
                                       @PathVariable("expenseId") Integer expenseId,
                                       @PathVariable("userId") Integer userId,
